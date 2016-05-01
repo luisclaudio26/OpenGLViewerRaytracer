@@ -13,11 +13,11 @@ using std::stringstream;
 #include <cstdio>
 
 typedef struct {
-	double x, y, z;
+	float x, y, z;
 } Vec3;
 
 typedef struct {
-	double x, y, z, w;
+	float x, y, z, w;
 } Vec4;
 
 typedef struct {
