@@ -92,7 +92,7 @@ int main(int argc, char** args)
 		//Install our shader, draw geometry
 		glUseProgram(shader_program_id);
 		glBindVertexArray(vertexArrayID);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawArrays(GL_TRIANGLES, 0, obj.faces.size() * 3);
 		glBindVertexArray(0);
 		glUseProgram(0);
 
