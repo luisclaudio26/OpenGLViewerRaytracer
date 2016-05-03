@@ -1,3 +1,6 @@
+*.obj
 *.pdf
+*.bmp
+*.mtl
 render
 main

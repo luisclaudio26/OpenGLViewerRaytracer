@@ -68,11 +68,11 @@ int main(int argc, char** args)
 	GLuint shader_program_id = load_shaders();
 
 	//Load data into buffer
-	Object obj; obj.load("./obj/suzanne.obj");
+	Object obj; obj.load("./obj/sphere/sphere.obj");
 	GLuint vertex_buffer;
 	glGenBuffers(1, &vertex_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, obj.faces.size()*sizeof(Vertex), (void*)obj.faces.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, obj.out_vertices.size()*sizeof(Vertex), (void*)obj.out_vertices.data(), GL_STATIC_DRAW);
 	
 	//Bind data to variables inside shader!!!
 	GLuint pos = glGetAttribLocation(shader_program_id, "pos");
@@ -86,9 +86,9 @@ int main(int argc, char** args)
 	glEnableVertexAttribArray(normal);
 	glEnableVertexAttribArray(tex);
 
-	glVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 9*sizeof(GL_FLOAT), 0);
-	glVertexAttribPointer(normal, 3, GL_FLOAT, GL_FALSE, 9*sizeof(GL_FLOAT), (GLvoid*)(3*sizeof(GL_FLOAT)));
-	glVertexAttribPointer(tex, 3, GL_FLOAT, GL_FALSE, 9*sizeof(GL_FLOAT), (GLvoid*)(6*sizeof(GL_FLOAT)));
+	glVertexAttribPointer(pos, 3, GL_FLOAT, GL_TRUE, 8*sizeof(GL_FLOAT), 0);
+	glVertexAttribPointer(normal, 3, GL_FLOAT, GL_TRUE, 8*sizeof(GL_FLOAT), (GLvoid*)(3*sizeof(GL_FLOAT)));
+	glVertexAttribPointer(tex, 2, GL_FLOAT, GL_TRUE, 8*sizeof(GL_FLOAT), (GLvoid*)(6*sizeof(GL_FLOAT)));
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -109,7 +109,7 @@ int main(int argc, char** args)
 	GLuint model = glGetUniformLocation(shader_program_id, "model");
 
 	//lighting model
-	glm::vec4 point_light1 = glm::vec4(0.0f, 2.0f, -2.0f, 1.0f);
+	glm::vec4 point_light1 = glm::vec4(4.0f, 1.0f, -8.0f, 1.0f);
 	GLuint light1 = glGetUniformLocation(shader_program_id, "light1");
 
 	//-------------------------------
@@ -125,13 +125,13 @@ int main(int argc, char** args)
 
 		//---------- Set uniform data -----------
 		//Model matrix
-		//glm::mat4 Model = glm::rotate( glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f) );
-		glm::mat4 Model = glm::mat4(1.0f);
+		glm::mat4 Model = glm::rotate( glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f) );
+		//glm::mat4 Model = glm::mat4(1.0f);
 		glUniformMatrix4fv(model, 1, GL_FALSE, &Model[0][0]);
 		
 		//Point light
-		glm::mat4 LightMat = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(1.0f, 0.0f, 0.0f));
-		//glm::mat4 LightMat = glm::mat4(1.0f);
+		//glm::mat4 LightMat = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 LightMat = glm::mat4(1.0f);
 		glm::vec4 lightPos = LightMat * point_light1;
 		glUniform3f(light1, lightPos[0], lightPos[1], lightPos[2]);
 		
@@ -142,7 +142,7 @@ int main(int argc, char** args)
 
 		//Load data for each model
 		glBindVertexArray(vertexArrayID);
-		glDrawArrays(GL_TRIANGLES, 0, obj.faces.size() * 3);
+		glDrawArrays(GL_TRIANGLES, 0, obj.out_vertices.size());
 		glBindVertexArray(0);
 		
 		glUseProgram(0);
