@@ -60,22 +60,27 @@ private:
 			int v2, vt2, vn2;
 			int v3, vt3, vn3;
 
-			sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d", &v1, &vt1, &vn1,
-																&v2, &vt2, &vn2,
-																&v3, &vt3, &vn3);
+			//sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d", &v1, &vt1, &vn1,
+			//													&v2, &vt2, &vn2,
+			//													&v3, &vt3, &vn3);
+
+			sscanf(line.c_str(), "f %d//%d %d//%d %d//%d", &v1, &vn1,
+															&v2, &vn2,
+															&v3, &vn3);
+
 
 			Face f;
 			f.v[0].pos = vertice[v1-1];
 			f.v[0].n = normal[vn1-1];
-			f.v[0].tex = texture[vt1-1];			
+			//f.v[0].tex = texture[vt1-1];			
 
 			f.v[1].pos = vertice[v2-1];
 			f.v[1].n = normal[vn2-1];
-			f.v[1].tex = texture[vt2-1];
+			//f.v[1].tex = texture[vt2-1];
 
 			f.v[2].pos = vertice[v3-1];
 			f.v[2].n = normal[vn3-1];
-			f.v[2].tex = texture[vt3-1];
+			//f.v[2].tex = texture[vt3-1];
 
 			faces.push_back(f);
 		}

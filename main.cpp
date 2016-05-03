@@ -8,18 +8,27 @@
 int load_shaders();
 
 char* vertex_shader = 	"#version 150\n"
-						"uniform mat4 mvp;\n"
+						"uniform mat4 model;\n"
+						"uniform mat4 vp;\n"
+						"uniform vec3 light1;\n"
 						"in vec3 pos;\n"
 						"in vec3 normal;\n"
 						"in vec3 tex;\n"
+						"out vec3 vcolor;\n"
 						"void main() {\n"
-						"	gl_Position = mvp * vec4(pos, 1.0);\n"
+						"	vec4 pos_world_space = model * vec4(pos, 1.0);\n"
+						"	vec4 normal_world_space = model * vec4(normal, 1.0);\n"
+						"	gl_Position = vp * pos_world_space;\n"
+						"	vec4 v2light = normalize( vec4(light1,1.0) - pos_world_space);\n"
+						"	float d = max(0.0, dot(v2light, normal_world_space));\n"
+						"	vcolor = d*vec3(1.0, 1.0, 1.0);\n"
 						"}";
 
 char* fragment_shader = "#version 150\n"
+						"in vec3 vcolor;\n"
 						"out vec4 fragColour;\n"
 						"void main() {\n"
-						"	fragColour = vec4(1.0, 0.0, 0.0, 1.0);\n"
+						"	fragColour = vec4(vcolor, 1.0);\n"
 						"}";
 
 int main(int argc, char** args)
@@ -59,7 +68,7 @@ int main(int argc, char** args)
 	GLuint shader_program_id = load_shaders();
 
 	//Load data into buffer
-	Object obj; obj.load("./capsule.obj");
+	Object obj; obj.load("./obj/suzanne.obj");
 	GLuint vertex_buffer;
 	glGenBuffers(1, &vertex_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
@@ -84,9 +93,9 @@ int main(int argc, char** args)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	//matrices
+	//visualization
 	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.1f, 20.0f);
-	glm::mat4 View = glm::lookAt( glm::vec3(10.0f, 0.0f, 0.0f), //Position 
+	glm::mat4 View = glm::lookAt( glm::vec3(5.0f, 1.5f, 0.0f), //Position 
 								glm::vec3(0.0f, 0.0f, 0.0f), 	//Look direction
 								glm::vec3(0.0f, 1.0f, 0.0f) );	//Up
 
@@ -96,7 +105,12 @@ int main(int argc, char** args)
 	//model angle
 	float angle = 0.0f;
 
-	GLuint mvp = glGetUniformLocation(shader_program_id, "mvp");
+	GLuint vp = glGetUniformLocation(shader_program_id, "vp");
+	GLuint model = glGetUniformLocation(shader_program_id, "model");
+
+	//lighting model
+	glm::vec4 point_light1 = glm::vec4(0.0f, 2.0f, -2.0f, 1.0f);
+	GLuint light1 = glGetUniformLocation(shader_program_id, "light1");
 
 	//-------------------------------
 	//---------- MAIN LOOP ----------
@@ -109,14 +123,22 @@ int main(int argc, char** args)
 		//Install our shader, draw geometry
 		glUseProgram(shader_program_id);
 
-		//Set uniform data
-		glm::mat4 Model = glm::rotate( glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f) );
-		glm::mat4 mvpMatrix = vpMatrix * Model;
+		//---------- Set uniform data -----------
+		//Model matrix
+		//glm::mat4 Model = glm::rotate( glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f) );
+		glm::mat4 Model = glm::mat4(1.0f);
+		glUniformMatrix4fv(model, 1, GL_FALSE, &Model[0][0]);
+		
+		//Point light
+		glm::mat4 LightMat = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(1.0f, 0.0f, 0.0f));
+		//glm::mat4 LightMat = glm::mat4(1.0f);
+		glm::vec4 lightPos = LightMat * point_light1;
+		glUniform3f(light1, lightPos[0], lightPos[1], lightPos[2]);
+		
+		//View-Project matrix
+		glUniformMatrix4fv(vp, 1, GL_FALSE, &vpMatrix[0][0]);
 
-		glUniformMatrix4fv(mvp, 1, GL_FALSE, &mvpMatrix[0][0]);
-
-		angle += 0.05f;
-		if(angle >= 6.28) angle = 0.0;
+		angle += 0.005f; if(angle >= 6.28) angle = 0.0;
 
 		//Load data for each model
 		glBindVertexArray(vertexArrayID);
