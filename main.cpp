@@ -1,16 +1,19 @@
 #include <GL/glew.h>
 #include <glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "object.h"
 #include <iostream>
 
 int load_shaders();
 
 char* vertex_shader = 	"#version 150\n"
+						"uniform mat4 mvp;\n"
 						"in vec3 pos;\n"
 						"in vec3 normal;\n"
 						"in vec3 tex;\n"
 						"void main() {\n"
-						"	gl_Position = vec4(pos, 1.0);\n"
+						"	gl_Position = mvp * vec4(pos, 1.0);\n"
 						"}";
 
 char* fragment_shader = "#version 150\n"
@@ -81,6 +84,20 @@ int main(int argc, char** args)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
+	//matrices
+	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.1f, 20.0f);
+	glm::mat4 View = glm::lookAt( glm::vec3(10.0f, 0.0f, 0.0f), //Position 
+								glm::vec3(0.0f, 0.0f, 0.0f), 	//Look direction
+								glm::vec3(0.0f, 1.0f, 0.0f) );	//Up
+
+	//Pre-multiply projection and view
+	glm::mat4 vpMatrix = Projection * View;
+
+	//model angle
+	float angle = 0.0f;
+
+	GLuint mvp = glGetUniformLocation(shader_program_id, "mvp");
+
 	//-------------------------------
 	//---------- MAIN LOOP ----------
 	//-------------------------------
@@ -91,9 +108,21 @@ int main(int argc, char** args)
 
 		//Install our shader, draw geometry
 		glUseProgram(shader_program_id);
+
+		//Set uniform data
+		glm::mat4 Model = glm::rotate( glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f) );
+		glm::mat4 mvpMatrix = vpMatrix * Model;
+
+		glUniformMatrix4fv(mvp, 1, GL_FALSE, &mvpMatrix[0][0]);
+
+		angle += 0.05f;
+		if(angle >= 6.28) angle = 0.0;
+
+		//Load data for each model
 		glBindVertexArray(vertexArrayID);
 		glDrawArrays(GL_TRIANGLES, 0, obj.faces.size() * 3);
 		glBindVertexArray(0);
+		
 		glUseProgram(0);
 
 		//Swap buffer and query events
@@ -119,6 +148,10 @@ int load_shaders()
 	GLuint v_shader_id = glCreateShader(GL_VERTEX_SHADER); //Create shader id
 	glShaderSource(v_shader_id, 1, &v_shader_code, NULL);
 	glCompileShader(v_shader_id);
+
+	char buffer[1000];
+	glGetShaderInfoLog(v_shader_id, 1000, NULL, buffer);
+	std::cout<<buffer<<std::endl;
 
 	//Load fragment shader from hard coded string
 	const GLchar* f_shader_code = fragment_shader;
