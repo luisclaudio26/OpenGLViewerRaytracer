@@ -7,7 +7,7 @@
 #include <cstring>
 
 #include "inc/object.h"
-#include "inc/shaderloader.h"
+#include "inc/pointlight.h"
 
 GLFWwindow* setup();
 
@@ -29,6 +29,10 @@ int main(int argc, char** args)
 	//---------------------------
 	//-------- Lighting ---------
 	//---------------------------
+	PointLight p;
+	p.pos = glm::vec3(3.0f, 3.0f, -3.0f);
+	p.color = glm::vec3(1.0f, 1.0f, 1.0f);
+	p.intensity = 1.0f;
 
 	//----------------------------------
 	//-------- Geometry setting --------
@@ -42,7 +46,7 @@ int main(int argc, char** args)
 		//Clear screen -> this function also clears stencil and depth buffer
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-		obj.draw();
+		obj.draw(&p, 1);
 
 		//Swap buffer and query events
 		glfwSwapBuffers(window);

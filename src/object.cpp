@@ -100,28 +100,27 @@ void Object::load_glsl_parameters()
 	this->h_vp = glGetUniformLocation(this->shader_id, "vp");
 }
 
-void Object::draw()
+void Object::draw(PointLight pl[], unsigned int n)
 {
 	//Install model shader
 	glUseProgram(this->shader_id);
 
-	//Set uniform data
+	//Model transformation
 	GLuint model = glGetUniformLocation(this->shader_id, "model.transform");
 	glm::mat4 Model = glm::mat4(1.0f);
 	glUniformMatrix4fv(model, 1, GL_FALSE, &Model[0][0]);
 
+	//material settings
 	glUniform1f(this->h_kD, 1.0f);
 	glUniform1f(this->h_kA, 0.2f);
 	glUniform1f(this->h_kS, 0.0f);
 	
+	//View-Projection matrix
 	glUniformMatrix4fv(this->h_vp, 1, GL_FALSE, &(*this->vp)[0][0]);
 
-	//----------- This will removed from here after ------------
-	glm::vec4 lightPos = glm::vec4(3.0f, 3.0f, -3.0f, 1.0f);
-
+	//point lights
 	GLuint light1 = glGetUniformLocation(this->shader_id, "light1");
-	glUniform3f(light1, lightPos[0], lightPos[1], lightPos[2]);	
-	//----------------------------------------------------------
+	glUniform3f(light1, pl[0].pos[0], pl[0].pos[1], pl[0].pos[2]);	
 
 	//Load data for each model
 	glBindVertexArray(this->vertex_array_id);

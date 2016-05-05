@@ -12,6 +12,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "./pointlight.h"
+
 typedef struct {
 	float u, v;
 } Vec2;
@@ -70,8 +72,8 @@ public:
 	//being the one we passed as argument
 	void load(const std::string& model, const std::string& shader);
 	
-	//TODO: get light information here
-	void draw();
+	//Get an array with the point lights
+	void draw(PointLight pl[], unsigned int n);
 
 	//define View-Projection matrix of our scene
 	void setViewProjection(glm::mat4* vp);
