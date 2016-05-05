@@ -7,6 +7,11 @@
 #include <sstream>
 #include <cstdio>
 
+#include <GL/glew.h>
+#include <glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 typedef struct {
 	float u, v;
 } Vec2;
@@ -27,19 +32,42 @@ typedef struct {
 class Object
 {
 private:
+	//--------------------------------
+	//------- Geometry storage -------
+	//--------------------------------
 	std::vector<Vec3> vertice;
 	std::vector<Vec2> texture;
 	std::vector<Vec3> normal;
-
 	std::vector<Vertex> out_vertices;
 
+	//--------------------------------
+	//------- Material setting -------
+	//--------------------------------
+	GLuint h_kA, h_kD, h_kS; //Handles to material settings
+	float kA, kD, kS;
+
+	//------------------------------------
+	//------- OpenGL related stuff -------
+	//------------------------------------
+	GLuint shader_id, vertex_array_id;
+
+	//-----------------------------------
+	//------- Internal operations -------
+	//-----------------------------------
 	void process_line(const std::string& line);
+	void load_into_opengl(const std::string& shader);
+	void load_glsl_parameters();
 
 public:
-	void load(const std::string& file);
-	std::vector<Vertex>& getVertices() {
-		return out_vertices;
-	}
+	Object();
+
+	//This function expects to find two shader files with
+	//extensions .vshader and .fshader, with the first name
+	//being the one we passed as argument
+	void load(const std::string& model, const std::string& shader);
+	
+	//TODO: get light information here
+	void draw();
 };
 
 #endif

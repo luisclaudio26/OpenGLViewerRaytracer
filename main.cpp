@@ -9,8 +9,6 @@
 #include "inc/object.h"
 #include "inc/shaderloader.h"
 
-int load_shaders();
-
 int main(int argc, char** args)
 {
 	//This will setup a new window and OpenGL context.
@@ -44,62 +42,8 @@ int main(int argc, char** args)
 	//--------------------------------------
 	//---------- GEOMETRY LOADING ----------
 	//--------------------------------------
-	GLuint vertexArrayID;
-	glGenVertexArrays(1, &vertexArrayID);
-	glBindVertexArray(vertexArrayID);
-
-	//Load shader code
-	GLuint shader_program_id = load_shaders();
-
-	//Load data into buffer
-	Object obj; obj.load("./obj/lowPolySphere/lpSphere.obj");
-	GLuint vertex_buffer;
-	glGenBuffers(1, &vertex_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, obj.getVertices().size()*sizeof(Vertex), &obj.getVertices()[0], GL_STATIC_DRAW);
-	
-	//Bind data to variables inside shader!!!
-	GLuint pos = glGetAttribLocation(shader_program_id, "pos");
-	GLuint normal = glGetAttribLocation(shader_program_id, "normal");
-	GLuint tex = glGetAttribLocation(shader_program_id, "tex");
-
-	//This is information of how to iterate over vertex data. posColor is in the positions
-	//3,6,9,... so we need to define this offset. Also, vertice data are packed in 6 floats,
-	//so we inform this also
-	glEnableVertexAttribArray(pos);
-	glEnableVertexAttribArray(normal);
-	glEnableVertexAttribArray(tex);
-
-	glVertexAttribPointer(pos, 3, GL_FLOAT, GL_FALSE, 8*sizeof(GL_FLOAT), 0);
-	glVertexAttribPointer(normal, 3, GL_FLOAT, GL_FALSE, 8*sizeof(GL_FLOAT), (GLvoid*)(3*sizeof(GL_FLOAT)));
-	glVertexAttribPointer(tex, 2, GL_FLOAT, GL_FALSE, 8*sizeof(GL_FLOAT), (GLvoid*)(6*sizeof(GL_FLOAT)));
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-
-	//material
-	GLuint kD_id = glGetUniformLocation(shader_program_id, "model.kD");
-	GLuint kA_id = glGetUniformLocation(shader_program_id, "model.kA");
-	GLuint kS_id = glGetUniformLocation(shader_program_id, "model.kS");
-
-	//visualization
-	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.01f, 20.0f);
-	glm::mat4 View = glm::lookAt( glm::vec3(3.0f, 3.0f, 3.0f), //Position 
-								glm::vec3(0.0f, 0.0f, 0.0f), 	//Look direction
-								glm::vec3(0.0f, 1.0f, 0.0f) );	//Up
-
-	//Pre-multiply projection and view
-	glm::mat4 vpMatrix = Projection * View;
-
-	//model angle
-	float angle = 0.0f;
-
-	GLuint vp = glGetUniformLocation(shader_program_id, "vp");
-	GLuint model = glGetUniformLocation(shader_program_id, "model.Matrix");
-
-	//lighting model
-	glm::vec4 point_light1 = glm::vec4(3.0f, 1.0f, 0.0f, 1.0f);
-	GLuint light1 = glGetUniformLocation(shader_program_id, "light1");
+	//Load model
+	Object obj; obj.load("./obj/lowPolySphere/lpSphere.obj", "./shaders/flat");
 
 	//-------------------------------
 	//---------- MAIN LOOP ----------
@@ -109,34 +53,7 @@ int main(int argc, char** args)
 		//Clear screen -> this function also clears stencil and depth buffer
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-		//Install our shader, draw geometry
-		glUseProgram(shader_program_id);
-
-		//---------- Set uniform data -----------
-		//Model matrix
-		glm::mat4 Model = glm::mat4(2.0f);
-		glUniformMatrix4fv(model, 1, GL_FALSE, &Model[0][0]);
-
-		glUniform1f(kD_id, 1.0f);
-		glUniform1f(kA_id, 0.2f);
-		glUniform1f(kS_id, 0.0f);
-		
-		//Point light
-		glm::mat4 LightMat = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
-		glm::vec4 lightPos = LightMat * point_light1;
-		glUniform3f(light1, lightPos[0], lightPos[1], lightPos[2]);
-		
-		//View-Project matrix
-		glUniformMatrix4fv(vp, 1, GL_FALSE, &vpMatrix[0][0]);
-
-		angle += 0.02f; if(angle >= 6.28) angle = 0.0;
-
-		//Load data for each model
-		glBindVertexArray(vertexArrayID);
-		glDrawArrays(GL_TRIANGLES, 0, obj.getVertices().size());
-		glBindVertexArray(0);
-		
-		glUseProgram(0);
+		obj.draw();
 
 		//Swap buffer and query events
 		glfwSwapBuffers(window);
@@ -149,48 +66,4 @@ int main(int argc, char** args)
 	glfwTerminate();
 
 	return 0;
-}
-
-int load_shaders()
-{
-	//Effectively, this function create shader objects, load shader code,
-	//compile it, create a program, attach the shaders to it then link the program
-
-	//Load vertex shader from hard coded string
-	std::string v_temp = ShaderLoader::load_shader("./shaders/flat.vshader");
-	GLchar* v_shader_code = new GLchar[v_temp.length()+1];
-	strcpy(v_shader_code, v_temp.c_str());
-	const GLchar* v_aux = v_shader_code;
-
-	GLuint v_shader_id = glCreateShader(GL_VERTEX_SHADER); //Create shader id
-	glShaderSource(v_shader_id, 1, &v_aux, NULL);
-	glCompileShader(v_shader_id);
-
-	char buffer[1000];
-	glGetShaderInfoLog(v_shader_id, 1000, NULL, buffer);
-	std::cout<<"Vertex shader log:\n"<<buffer<<std::endl;
-
-	delete[] v_shader_code;
-
-	//Load fragment shader from hard coded string
-	std::string f_temp = ShaderLoader::load_shader("./shaders/flat.fshader");
-	GLchar* f_shader_code = new GLchar[f_temp.length()+1];
-	strcpy(f_shader_code, f_temp.c_str());
-	const GLchar* f_aux = f_shader_code;
-
-	GLuint f_shader_id = glCreateShader(GL_FRAGMENT_SHADER); //Create shader id
-	glShaderSource(f_shader_id, 1, &f_aux, NULL);
-	glCompileShader(f_shader_id);
-
-	char buffer2[1000];
-	glGetShaderInfoLog(f_shader_id, 1000, NULL, buffer2);
-	std::cout<<"Fragment shader log:\n"<<buffer2<<std::endl;
-
-	//Link program
-	GLuint program_id = glCreateProgram();
-	glAttachShader(program_id, v_shader_id);
-	glAttachShader(program_id, f_shader_id);
-	glLinkProgram(program_id);
-
-	return program_id;
 }
