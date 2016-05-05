@@ -3,10 +3,14 @@
 
 Object::Object()
 {
+	//Handlers
 	this->shader_id = 0;
 	this->vertex_array_id = 0;
 	this->h_kA = this->h_kD = this->h_kS = 0;
+	
+	//Transformation
 	this->vp = NULL;
+	this->model = glm::mat4(1.0f);
 
 	//Random default value
 	this->kA = this->kD = this->kS = 0.3f;
@@ -97,6 +101,7 @@ void Object::load_glsl_parameters()
 	this->h_kD = glGetUniformLocation(this->shader_id, "model.kD");
 	this->h_kA = glGetUniformLocation(this->shader_id, "model.kA");
 	this->h_kS = glGetUniformLocation(this->shader_id, "model.kS");
+	this->h_model = glGetUniformLocation(this->shader_id, "model.transform");
 	this->h_vp = glGetUniformLocation(this->shader_id, "vp");
 }
 
@@ -106,9 +111,7 @@ void Object::draw(PointLight pl[], unsigned int n)
 	glUseProgram(this->shader_id);
 
 	//Model transformation
-	GLuint model = glGetUniformLocation(this->shader_id, "model.transform");
-	glm::mat4 Model = glm::mat4(1.0f);
-	glUniformMatrix4fv(model, 1, GL_FALSE, &Model[0][0]);
+	glUniformMatrix4fv(this->h_model, 1, GL_FALSE, &this->model[0][0]);
 
 	//material settings
 	glUniform1f(this->h_kD, 1.0f);

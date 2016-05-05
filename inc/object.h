@@ -34,7 +34,11 @@ typedef struct {
 class Object
 {
 private:
+	//-------------------------------
+	//------- Transformations -------
+	//-------------------------------
 	glm::mat4 *vp;
+	glm::mat4 model;
 
 	//--------------------------------
 	//------- Geometry storage -------
@@ -56,6 +60,7 @@ private:
 	
 	GLuint h_kA, h_kD, h_kS; //Handles to material settings
 	GLuint h_vp; //Handle to view-projection
+	GLuint h_model; //Handle to model transformation
 
 	//-----------------------------------
 	//------- Internal operations -------
