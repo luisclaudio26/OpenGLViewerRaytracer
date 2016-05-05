@@ -9,7 +9,55 @@
 #include "inc/object.h"
 #include "inc/shaderloader.h"
 
+GLFWwindow* setup();
+
 int main(int argc, char** args)
+{
+	GLFWwindow* window = setup();
+
+	//------------------------------------------
+	//-------- View-Projection settings --------
+	//------------------------------------------
+	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.01f, 20.0f);
+	glm::mat4 View = glm::lookAt( glm::vec3(3.0f, 3.0f, 3.0f), //Position 
+								glm::vec3(0.0f, 0.0f, 0.0f), 	//Look direction
+								glm::vec3(0.0f, 1.0f, 0.0f) );	//Up
+
+	//Pre-multiply projection and view
+	glm::mat4 vpMatrix = Projection * View;
+
+	//---------------------------
+	//-------- Lighting ---------
+	//---------------------------
+
+	//----------------------------------
+	//-------- Geometry setting --------
+	//----------------------------------
+	Object obj;
+	obj.load("./obj/lowPolySphere/lpSphere.obj", "./shaders/flat");
+	obj.setViewProjection(&vpMatrix);
+
+	do
+	{
+		//Clear screen -> this function also clears stencil and depth buffer
+		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+		obj.draw();
+
+		//Swap buffer and query events
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+
+	} while(glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && 
+			!glfwWindowShouldClose(window));
+
+	//Drop GLFW device
+	glfwTerminate();
+
+	return 0;
+}
+
+GLFWwindow* setup()
 {
 	//This will setup a new window and OpenGL context.
 	//GLFW or GLUT may be used for this kind of stuff.
@@ -39,31 +87,5 @@ int main(int argc, char** args)
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
-	//--------------------------------------
-	//---------- GEOMETRY LOADING ----------
-	//--------------------------------------
-	//Load model
-	Object obj; obj.load("./obj/lowPolySphere/lpSphere.obj", "./shaders/flat");
-
-	//-------------------------------
-	//---------- MAIN LOOP ----------
-	//-------------------------------
-	do
-	{
-		//Clear screen -> this function also clears stencil and depth buffer
-		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-		obj.draw();
-
-		//Swap buffer and query events
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-
-	} while(glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && 
-			!glfwWindowShouldClose(window));
-
-	//Drop GLFW device
-	glfwTerminate();
-
-	return 0;
+	return window;
 }

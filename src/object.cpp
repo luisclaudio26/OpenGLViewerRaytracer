@@ -6,9 +6,15 @@ Object::Object()
 	this->shader_id = 0;
 	this->vertex_array_id = 0;
 	this->h_kA = this->h_kD = this->h_kS = 0;
+	this->vp = NULL;
 
 	//Random default value
 	this->kA = this->kD = this->kS = 0.3f;
+}
+
+void Object::setViewProjection(glm::mat4* vp)
+{
+	this->vp = vp;
 }
 
 void Object::load(const std::string& file, const std::string& shader)
@@ -91,6 +97,7 @@ void Object::load_glsl_parameters()
 	this->h_kD = glGetUniformLocation(this->shader_id, "model.kD");
 	this->h_kA = glGetUniformLocation(this->shader_id, "model.kA");
 	this->h_kS = glGetUniformLocation(this->shader_id, "model.kS");
+	this->h_vp = glGetUniformLocation(this->shader_id, "vp");
 }
 
 void Object::draw()
@@ -99,7 +106,7 @@ void Object::draw()
 	glUseProgram(this->shader_id);
 
 	//Set uniform data
-	GLuint model = glGetUniformLocation(this->shader_id, "model.Matrix");
+	GLuint model = glGetUniformLocation(this->shader_id, "model.transform");
 	glm::mat4 Model = glm::mat4(1.0f);
 	glUniformMatrix4fv(model, 1, GL_FALSE, &Model[0][0]);
 
@@ -107,23 +114,13 @@ void Object::draw()
 	glUniform1f(this->h_kA, 0.2f);
 	glUniform1f(this->h_kS, 0.0f);
 	
+	glUniformMatrix4fv(this->h_vp, 1, GL_FALSE, &(*this->vp)[0][0]);
+
 	//----------- This will removed from here after ------------
 	glm::vec4 lightPos = glm::vec4(3.0f, 3.0f, -3.0f, 1.0f);
 
 	GLuint light1 = glGetUniformLocation(this->shader_id, "light1");
-	glUniform3f(light1, lightPos[0], lightPos[1], lightPos[2]);
-	
-	//View-Project matrix
-	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.01f, 20.0f);
-	glm::mat4 View = glm::lookAt( glm::vec3(3.0f, 3.0f, 3.0f), //Position 
-								glm::vec3(0.0f, 0.0f, 0.0f), 	//Look direction
-								glm::vec3(0.0f, 1.0f, 0.0f) );	//Up
-
-	//Pre-multiply projection and view
-	glm::mat4 vpMatrix = Projection * View;
-
-	GLuint vp = glGetUniformLocation(this->shader_id, "vp");
-	glUniformMatrix4fv(vp, 1, GL_FALSE, &vpMatrix[0][0]);
+	glUniform3f(light1, lightPos[0], lightPos[1], lightPos[2]);	
 	//----------------------------------------------------------
 
 	//Load data for each model
@@ -133,8 +130,6 @@ void Object::draw()
 	
 	glUseProgram(0);
 }
-
-
 
 //Terrible function. It'll change after 
 //(or not; we're waiting for Waldon's code)

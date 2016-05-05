@@ -32,6 +32,8 @@ typedef struct {
 class Object
 {
 private:
+	glm::mat4 *vp;
+
 	//--------------------------------
 	//------- Geometry storage -------
 	//--------------------------------
@@ -43,13 +45,15 @@ private:
 	//--------------------------------
 	//------- Material setting -------
 	//--------------------------------
-	GLuint h_kA, h_kD, h_kS; //Handles to material settings
 	float kA, kD, kS;
 
 	//------------------------------------
 	//------- OpenGL related stuff -------
 	//------------------------------------
 	GLuint shader_id, vertex_array_id;
+	
+	GLuint h_kA, h_kD, h_kS; //Handles to material settings
+	GLuint h_vp; //Handle to view-projection
 
 	//-----------------------------------
 	//------- Internal operations -------
@@ -68,6 +72,9 @@ public:
 	
 	//TODO: get light information here
 	void draw();
+
+	//define View-Projection matrix of our scene
+	void setViewProjection(glm::mat4* vp);
 };
 
 #endif
