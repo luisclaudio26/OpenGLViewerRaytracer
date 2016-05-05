@@ -1,6 +1,6 @@
 #version 150
 
-flat in vec3 vcolor;
+smooth in vec3 vcolor;
 
 out vec4 fragColour;
 

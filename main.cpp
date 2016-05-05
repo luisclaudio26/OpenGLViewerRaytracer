@@ -31,15 +31,15 @@ int main(int argc, char** args)
 	//---------------------------
 	PointLight p[2];
 	p[0].pos = glm::vec3(0.0f, 0.0f, +3.0f);
-	p[0].intensity = 1.0f;
+	p[0].intensity = 2.0f;
 	p[0].falloff = 1.0f;
 
 	p[1].pos = glm::vec3(0.0f, 0.0f, -3.0f);
-	p[1].intensity = 1.0f;
+	p[1].intensity = 2.0f;
 	p[1].falloff = 1.0f;
 
 	glm::vec3 p0 = glm::vec3(0.0f, 0.0f, +3.0f);
-	glm::vec3 p1 = glm::vec3(0.0f, +3.0f, 0.0f);
+	glm::vec3 p1 = glm::vec3(0.0f, +4.0f, 0.0f);
 
 	float angle = 0.0f;
 

@@ -24,7 +24,7 @@ Object::Object()
 	this->model = glm::mat4(1.0f);
 
 	//Random default value
-	this->kA = this->kD = this->kS = 0.3f;
+	this->kA = this->kD = this->kS = 1.0f;
 	this->colorA = glm::vec3(1.0f, 0.0f, 0.0f);
 	this->colorD = glm::vec3(0.0f, 1.0f, 0.0f);
 	this->colorS = glm::vec3(0.0f, 0.0f, 1.0f);

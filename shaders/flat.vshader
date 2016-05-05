@@ -28,7 +28,7 @@ in vec3 pos;
 in vec3 normal;
 in vec3 tex;
 
-flat out vec3 vcolor;
+smooth out vec3 vcolor;
 
 void main() 
 {
