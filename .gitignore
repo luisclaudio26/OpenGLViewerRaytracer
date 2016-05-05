@@ -4,3 +4,4 @@
 *.mtl
 render
 main
+*.o

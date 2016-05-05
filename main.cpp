@@ -2,40 +2,14 @@
 #include <glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "object.h"
-#include "shaderloader.h"
+
 #include <iostream>
 #include <cstring>
 
+#include "inc/object.h"
+#include "inc/shaderloader.h"
+
 int load_shaders();
-
-char* vertex_shader = 	"#version 150\n"
-						"struct _model {\n"
-						"	mat4 Matrix;\n"
-						"	float kD;\n"
-						"	float kA;\n"
-						"	float kS;\n"
-						"};\n"
-						"uniform _model model;"
-						"uniform mat4 vp;\n"
-						"uniform vec3 light1;\n"
-						"in vec3 pos;\n"
-						"in vec3 normal;\n"
-						"in vec3 tex;\n"
-						"out vec3 vcolor;\n"
-						"void main() {\n"
-						"	gl_Position = vp * model.Matrix * vec4(pos, 1.0);\n"
-						"	vec3 v2light = normalize(light1 - pos);\n"
-						"	float d = max( 0.0, dot(v2light, normal) );\n"
-						"	vcolor = model.kA*vec3(0.0,0.0,1.0) + model.kD*d*vec3(0.0,0.0,1.0);\n"
-						"}";
-
-char* fragment_shader = "#version 150\n"
-						"in vec3 vcolor;\n"
-						"out vec4 fragColour;\n"
-						"void main() {\n"
-						"	fragColour = vec4(vcolor, 1.0);\n"
-						"}";
 
 int main(int argc, char** args)
 {
@@ -82,7 +56,7 @@ int main(int argc, char** args)
 	GLuint vertex_buffer;
 	glGenBuffers(1, &vertex_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-	glBufferData(GL_ARRAY_BUFFER, obj.out_vertices.size()*sizeof(Vertex), &obj.out_vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, obj.getVertices().size()*sizeof(Vertex), &obj.getVertices()[0], GL_STATIC_DRAW);
 	
 	//Bind data to variables inside shader!!!
 	GLuint pos = glGetAttribLocation(shader_program_id, "pos");
@@ -159,7 +133,7 @@ int main(int argc, char** args)
 
 		//Load data for each model
 		glBindVertexArray(vertexArrayID);
-		glDrawArrays(GL_TRIANGLES, 0, obj.out_vertices.size());
+		glDrawArrays(GL_TRIANGLES, 0, obj.getVertices().size());
 		glBindVertexArray(0);
 		
 		glUseProgram(0);
@@ -183,7 +157,7 @@ int load_shaders()
 	//compile it, create a program, attach the shaders to it then link the program
 
 	//Load vertex shader from hard coded string
-	std::string v_temp = ShaderLoader::load_shader("./flat.vshader");
+	std::string v_temp = ShaderLoader::load_shader("./shaders/flat.vshader");
 	GLchar* v_shader_code = new GLchar[v_temp.length()+1];
 	strcpy(v_shader_code, v_temp.c_str());
 	const GLchar* v_aux = v_shader_code;
@@ -199,7 +173,7 @@ int load_shaders()
 	delete[] v_shader_code;
 
 	//Load fragment shader from hard coded string
-	std::string f_temp = ShaderLoader::load_shader("./flat.fshader");
+	std::string f_temp = ShaderLoader::load_shader("./shaders/flat.fshader");
 	GLchar* f_shader_code = new GLchar[f_temp.length()+1];
 	strcpy(f_shader_code, f_temp.c_str());
 	const GLchar* f_aux = f_shader_code;
