@@ -65,26 +65,26 @@ private:
 			int v2, vt2, vn2;
 			int v3, vt3, vn3;
 
-			sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d", &v1, &vt1, &vn1,
-																&v2, &vt2, &vn2,
-																&v3, &vt3, &vn3);
+			//sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d", &v1, &vt1, &vn1,
+			//													&v2, &vt2, &vn2,
+			//													&v3, &vt3, &vn3);
 
-			//sscanf(line.c_str(), "f %d//%d %d//%d %d//%d", &v1, &vn1,
-			//												&v2, &vn2,
-			//												&v3, &vn3);
+			sscanf(line.c_str(), "f %d//%d %d//%d %d//%d", &v1, &vn1,
+															&v2, &vn2,
+															&v3, &vn3);
 
 			Vertex V1, V2, V3;
 			V1.pos = vertice[v1-1];
 			V1.n = normal[vn1-1];
-			V1.tex = texture[vt1-1];
+			//V1.tex = texture[vt1-1];
 
 			V2.pos = vertice[v2-1];
 			V2.n = normal[vn2-1];
-			V2.tex = texture[vt2-1];
+			//V2.tex = texture[vt2-1];
 
 			V3.pos = vertice[v3-1];
 			V3.n = normal[vn3-1];
-			V3.tex = texture[vt3-1];
+			//V3.tex = texture[vt3-1];
 
 			out_vertices.push_back(V1);
 			out_vertices.push_back(V2);

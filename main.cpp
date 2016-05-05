@@ -3,12 +3,19 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "object.h"
+#include "shaderloader.h"
 #include <iostream>
 
 int load_shaders();
 
 char* vertex_shader = 	"#version 150\n"
-						"uniform mat4 model;\n"
+						"struct _model {\n"
+						"	mat4 Matrix;\n"
+						"	float kD;\n"
+						"	float kA;\n"
+						"	float kS;\n"
+						"};\n"
+						"uniform _model model;"
 						"uniform mat4 vp;\n"
 						"uniform vec3 light1;\n"
 						"in vec3 pos;\n"
@@ -16,10 +23,10 @@ char* vertex_shader = 	"#version 150\n"
 						"in vec3 tex;\n"
 						"out vec3 vcolor;\n"
 						"void main() {\n"
-						"	gl_Position = vp * model * vec4(pos, 1.0);\n"
+						"	gl_Position = vp * model.Matrix * vec4(pos, 1.0);\n"
 						"	vec3 v2light = normalize(light1 - pos);\n"
 						"	float d = max( 0.0, dot(v2light, normal) );\n"
-						"	vcolor = d*vec3(0.0, 0.0, 1.0);\n"
+						"	vcolor = model.kA*vec3(0.0,0.0,1.0) + model.kD*d*vec3(0.0,0.0,1.0);\n"
 						"}";
 
 char* fragment_shader = "#version 150\n"
@@ -70,7 +77,7 @@ int main(int argc, char** args)
 	GLuint shader_program_id = load_shaders();
 
 	//Load data into buffer
-	Object obj; obj.load("./obj/f16/f16.obj");
+	Object obj; obj.load("./obj/lowPolySphere/lpSphere.obj");
 	GLuint vertex_buffer;
 	glGenBuffers(1, &vertex_buffer);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
@@ -95,6 +102,11 @@ int main(int argc, char** args)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
+	//material
+	GLuint kD_id = glGetUniformLocation(shader_program_id, "model.kD");
+	GLuint kA_id = glGetUniformLocation(shader_program_id, "model.kA");
+	GLuint kS_id = glGetUniformLocation(shader_program_id, "model.kS");
+
 	//visualization
 	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.01f, 20.0f);
 	glm::mat4 View = glm::lookAt( glm::vec3(3.0f, 3.0f, 3.0f), //Position 
@@ -108,7 +120,7 @@ int main(int argc, char** args)
 	float angle = 0.0f;
 
 	GLuint vp = glGetUniformLocation(shader_program_id, "vp");
-	GLuint model = glGetUniformLocation(shader_program_id, "model");
+	GLuint model = glGetUniformLocation(shader_program_id, "model.Matrix");
 
 	//lighting model
 	glm::vec4 point_light1 = glm::vec4(3.0f, 1.0f, 0.0f, 1.0f);
@@ -127,20 +139,22 @@ int main(int argc, char** args)
 
 		//---------- Set uniform data -----------
 		//Model matrix
-		//glm::mat4 Model = glm::rotate( glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f) );
-		glm::mat4 Model = glm::mat4(1.0f);
+		glm::mat4 Model = glm::mat4(2.0f);
 		glUniformMatrix4fv(model, 1, GL_FALSE, &Model[0][0]);
+
+		glUniform1f(kD_id, 1.0f);
+		glUniform1f(kA_id, 0.2f);
+		glUniform1f(kS_id, 0.0f);
 		
 		//Point light
 		glm::mat4 LightMat = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
-		//glm::mat4 LightMat = glm::mat4(1.0f);
 		glm::vec4 lightPos = LightMat * point_light1;
 		glUniform3f(light1, lightPos[0], lightPos[1], lightPos[2]);
 		
 		//View-Project matrix
 		glUniformMatrix4fv(vp, 1, GL_FALSE, &vpMatrix[0][0]);
 
-		angle += 0.05f; if(angle >= 6.28) angle = 0.0;
+		angle += 0.02f; if(angle >= 6.28) angle = 0.0;
 
 		//Load data for each model
 		glBindVertexArray(vertexArrayID);
@@ -175,13 +189,17 @@ int load_shaders()
 
 	char buffer[1000];
 	glGetShaderInfoLog(v_shader_id, 1000, NULL, buffer);
-	std::cout<<buffer<<std::endl;
+	std::cout<<"Vertex shader log:\n"<<buffer<<std::endl;
 
 	//Load fragment shader from hard coded string
 	const GLchar* f_shader_code = fragment_shader;
 	GLuint f_shader_id = glCreateShader(GL_FRAGMENT_SHADER); //Create shader id
 	glShaderSource(f_shader_id, 1, &f_shader_code, NULL);
 	glCompileShader(f_shader_id);
+
+	char buffer2[1000];
+	glGetShaderInfoLog(f_shader_id, 1000, NULL, buffer2);
+	std::cout<<"Fragment shader log:\n"<<buffer2<<std::endl;
 
 	//Link program
 	GLuint program_id = glCreateProgram();
