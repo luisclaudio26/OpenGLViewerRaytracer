@@ -5,6 +5,7 @@
 #include "object.h"
 #include "shaderloader.h"
 #include <iostream>
+#include <cstring>
 
 int load_shaders();
 
@@ -182,19 +183,29 @@ int load_shaders()
 	//compile it, create a program, attach the shaders to it then link the program
 
 	//Load vertex shader from hard coded string
-	const GLchar* v_shader_code = vertex_shader;
+	std::string v_temp = ShaderLoader::load_shader("./flat.vshader");
+	GLchar* v_shader_code = new GLchar[v_temp.length()+1];
+	strcpy(v_shader_code, v_temp.c_str());
+	const GLchar* v_aux = v_shader_code;
+
 	GLuint v_shader_id = glCreateShader(GL_VERTEX_SHADER); //Create shader id
-	glShaderSource(v_shader_id, 1, &v_shader_code, NULL);
+	glShaderSource(v_shader_id, 1, &v_aux, NULL);
 	glCompileShader(v_shader_id);
 
 	char buffer[1000];
 	glGetShaderInfoLog(v_shader_id, 1000, NULL, buffer);
 	std::cout<<"Vertex shader log:\n"<<buffer<<std::endl;
 
+	delete[] v_shader_code;
+
 	//Load fragment shader from hard coded string
-	const GLchar* f_shader_code = fragment_shader;
+	std::string f_temp = ShaderLoader::load_shader("./flat.fshader");
+	GLchar* f_shader_code = new GLchar[f_temp.length()+1];
+	strcpy(f_shader_code, f_temp.c_str());
+	const GLchar* f_aux = f_shader_code;
+
 	GLuint f_shader_id = glCreateShader(GL_FRAGMENT_SHADER); //Create shader id
-	glShaderSource(f_shader_id, 1, &f_shader_code, NULL);
+	glShaderSource(f_shader_id, 1, &f_aux, NULL);
 	glCompileShader(f_shader_id);
 
 	char buffer2[1000];
