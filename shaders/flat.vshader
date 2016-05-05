@@ -2,16 +2,27 @@
 
 struct _model {
 	mat4 transform;
-	
-	float kD;
-	float kA;
-	float kS;
-};
 
+	//Intensity and color for diffuse, 
+	//ambient and specular components
+	float kD; vec3 cD;
+	float kA; vec3 cA;
+	float kS; vec3 cS;
+};
 uniform _model model;
 
+
+const int N_LIGHTS = 2;
+struct _light {
+	vec3 pos;
+	float intensity;
+	float falloff;
+};
+uniform _light light[N_LIGHTS];
+
+
+//View-projection matrix
 uniform mat4 vp;
-uniform vec3 light1;
 
 in vec3 pos;
 in vec3 normal;
@@ -24,9 +35,18 @@ void main()
 	//Apply Model-View-Projection matrix to vertice
 	gl_Position = vp * model.transform * vec4(pos, 1.0);
 
-	//Compute diffuse component
-	vec3 v2light = normalize(light1 - pos);
-	float d = max( 0.0, dot(v2light, normal) );
-	
-	vcolor = model.kA*vec3(0.0,0.0,1.0) + model.kD*d*vec3(0.0,0.0,1.0);
+	//------- Compute diffuse component --------
+	float diffuse_acc = 0.0f;
+	for(int i = 0; i < N_LIGHTS; i++)
+	{
+		//diffuse reflection for this light
+		vec3 pos2light = light[i].pos - pos;
+		float diffuse = max(0.0, dot(normalize(pos2light), normal) );
+		float distance2 = dot(pos2light,pos2light);
+
+		diffuse_acc += (diffuse * light[i].intensity * model.kD) / (distance2 * light[i].falloff);
+	}
+
+	vcolor = model.kA * model.cA;
+	vcolor += diffuse_acc * model.cD;
 }

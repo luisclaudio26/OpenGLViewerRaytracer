@@ -19,7 +19,7 @@ int main(int argc, char** args)
 	//-------- View-Projection settings --------
 	//------------------------------------------
 	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.01f, 20.0f);
-	glm::mat4 View = glm::lookAt( glm::vec3(3.0f, 3.0f, 3.0f), //Position 
+	glm::mat4 View = glm::lookAt( glm::vec3(5.0f, 1.0f, 0.0f), //Position 
 								glm::vec3(0.0f, 0.0f, 0.0f), 	//Look direction
 								glm::vec3(0.0f, 1.0f, 0.0f) );	//Up
 
@@ -29,16 +29,25 @@ int main(int argc, char** args)
 	//---------------------------
 	//-------- Lighting ---------
 	//---------------------------
-	PointLight p;
-	p.pos = glm::vec3(3.0f, 3.0f, -3.0f);
-	p.color = glm::vec3(1.0f, 1.0f, 1.0f);
-	p.intensity = 1.0f;
+	PointLight p[2];
+	p[0].pos = glm::vec3(0.0f, 0.0f, +3.0f);
+	p[0].intensity = 1.0f;
+	p[0].falloff = 1.0f;
+
+	p[1].pos = glm::vec3(0.0f, 0.0f, -3.0f);
+	p[1].intensity = 1.0f;
+	p[1].falloff = 1.0f;
+
+	glm::vec3 p0 = glm::vec3(0.0f, 0.0f, +3.0f);
+	glm::vec3 p1 = glm::vec3(0.0f, +3.0f, 0.0f);
+
+	float angle = 0.0f;
 
 	//----------------------------------
 	//-------- Geometry setting --------
 	//----------------------------------
 	Object obj;
-	obj.load("./obj/lowPolySphere/lpSphere.obj", "./shaders/flat");
+	obj.load("./obj/suzanne.obj", "./shaders/flat");
 	obj.setViewProjection(&vpMatrix);
 
 	do
@@ -46,7 +55,15 @@ int main(int argc, char** args)
 		//Clear screen -> this function also clears stencil and depth buffer
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-		obj.draw(&p, 1);
+		glm::mat4 rot1 = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 rot2 = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 0.0f, 1.0f));
+		
+		p[0].pos = glm::vec3( rot1 * glm::vec4(p0, 1.0f) );
+		p[1].pos = glm::vec3( rot2 * glm::vec4(p1, 1.0f) );
+		
+		angle += 0.05f; if(angle >= 6.28) angle = 0.0f;
+
+		obj.draw(p, 2);
 
 		//Swap buffer and query events
 		glfwSwapBuffers(window);

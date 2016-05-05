@@ -52,15 +52,18 @@ private:
 	//------- Material setting -------
 	//--------------------------------
 	float kA, kD, kS;
+	glm::vec3 colorA, colorD, colorS;
 
 	//------------------------------------
 	//------- OpenGL related stuff -------
 	//------------------------------------
 	GLuint shader_id, vertex_array_id;
 	
-	GLuint h_kA, h_kD, h_kS; //Handles to material settings
-	GLuint h_vp; //Handle to view-projection
-	GLuint h_model; //Handle to model transformation
+	GLint h_kA, h_kD, h_kS; //Handles to material settings
+	GLint h_cA, h_cD, h_cS;
+
+	GLint h_vp; //Handle to view-projection
+	GLint h_model; //Handle to model transformation
 
 	//-----------------------------------
 	//------- Internal operations -------

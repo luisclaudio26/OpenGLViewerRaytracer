@@ -1,12 +1,23 @@
 #include "../inc/object.h"
 #include "../inc/shaderloader.h"
 
+//---------------------------------------------------
+//-------------------- INTERNAL ---------------------
+//---------------------------------------------------
+void load_vec3_uniform(GLuint handler, const glm::vec3& v) {
+	glUniform3f(handler, v[0], v[1], v[2]);
+}
+
+//--------------------------------------------------------
+//-------------------- FROM OBJECT.H ---------------------
+//--------------------------------------------------------
 Object::Object()
 {
 	//Handlers
 	this->shader_id = 0;
 	this->vertex_array_id = 0;
 	this->h_kA = this->h_kD = this->h_kS = 0;
+	this->h_cA = this->h_cD = this->h_cS = 0;
 	
 	//Transformation
 	this->vp = NULL;
@@ -14,6 +25,9 @@ Object::Object()
 
 	//Random default value
 	this->kA = this->kD = this->kS = 0.3f;
+	this->colorA = glm::vec3(1.0f, 0.0f, 0.0f);
+	this->colorD = glm::vec3(0.0f, 1.0f, 0.0f);
+	this->colorS = glm::vec3(0.0f, 0.0f, 1.0f);
 }
 
 void Object::setViewProjection(glm::mat4* vp)
@@ -101,7 +115,12 @@ void Object::load_glsl_parameters()
 	this->h_kD = glGetUniformLocation(this->shader_id, "model.kD");
 	this->h_kA = glGetUniformLocation(this->shader_id, "model.kA");
 	this->h_kS = glGetUniformLocation(this->shader_id, "model.kS");
+	this->h_cD = glGetUniformLocation(this->shader_id, "model.cD");
+	this->h_cA = glGetUniformLocation(this->shader_id, "model.cA");
+	this->h_cS = glGetUniformLocation(this->shader_id, "model.cS");
+
 	this->h_model = glGetUniformLocation(this->shader_id, "model.transform");
+	
 	this->h_vp = glGetUniformLocation(this->shader_id, "vp");
 }
 
@@ -114,16 +133,25 @@ void Object::draw(PointLight pl[], unsigned int n)
 	glUniformMatrix4fv(this->h_model, 1, GL_FALSE, &this->model[0][0]);
 
 	//material settings
-	glUniform1f(this->h_kD, 1.0f);
-	glUniform1f(this->h_kA, 0.2f);
-	glUniform1f(this->h_kS, 0.0f);
+	glUniform1f(this->h_kD, 1.0f); load_vec3_uniform(this->h_cD, this->colorD);
+	glUniform1f(this->h_kA, 0.2f); load_vec3_uniform(this->h_cA, this->colorA);
+	glUniform1f(this->h_kS, 0.0f); load_vec3_uniform(this->h_cS, this->colorS);
 	
 	//View-Projection matrix
 	glUniformMatrix4fv(this->h_vp, 1, GL_FALSE, &(*this->vp)[0][0]);
 
 	//point lights
-	GLuint light1 = glGetUniformLocation(this->shader_id, "light1");
-	glUniform3f(light1, pl[0].pos[0], pl[0].pos[1], pl[0].pos[2]);	
+	GLint lightLocation = glGetUniformLocation(this->shader_id, "light[0].pos");
+	for(int i = 0; i < n; i++)
+	{
+		//i*3, because each Light has 3 attributes inside it on our shader.
+		//How can I get this to be more generic?
+		GLint loc = lightLocation + i*3;
+
+		glUniform3f(loc, pl[i].pos[0], pl[i].pos[1], pl[i].pos[2]);
+		glUniform1f(loc+1, pl[i].intensity);
+		glUniform1f(loc+2, pl[i].falloff);
+	}
 
 	//Load data for each model
 	glBindVertexArray(this->vertex_array_id);

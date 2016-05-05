@@ -7,8 +7,9 @@
 class PointLight
 {
 public:
-	glm::vec3 pos, color;
+	glm::vec3 pos;
 	float intensity;
+	float falloff;
 };
 
 #endif
