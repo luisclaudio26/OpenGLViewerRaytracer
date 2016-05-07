@@ -65,7 +65,7 @@ int main(int argc, char** args)
 		
 		angle += 0.05f; if(angle >= 6.28) angle = 0.0f;
 
-		obj.draw(cameraPos, p, 1);
+		obj.draw(cameraPos, p, 2);
 
 		//Swap buffer and query events
 		glfwSwapBuffers(window);

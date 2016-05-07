@@ -13,7 +13,7 @@ struct _model {
 uniform _model model;
 
 
-const int N_LIGHTS = 1;
+const int N_LIGHTS = 2;
 struct _light {
 	vec3 pos;
 	float intensity;
@@ -50,7 +50,7 @@ void main()
 		float diffuse = max(0.0, dot(normalize(pos2light), normal) );
 		diffuse_acc += (diffuse * light[i].intensity * model.kD) / lightFalloff;
 
-		//------- Compute diffuse component --------
+		//------- Compute specular component --------
 		vec3 reflected = normalize( reflect(-pos2light, normal) );
 		vec3 pos2eye = normalize( eye - pos );
 		float spec = dot(reflected, pos2eye);
