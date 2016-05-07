@@ -18,8 +18,10 @@ int main(int argc, char** args)
 	//------------------------------------------
 	//-------- View-Projection settings --------
 	//------------------------------------------
+	glm::vec3 cameraPos = glm::vec3(5.0f, 1.0f, 0.0f);
+
 	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.01f, 20.0f);
-	glm::mat4 View = glm::lookAt( glm::vec3(5.0f, 1.0f, 0.0f), //Position 
+	glm::mat4 View = glm::lookAt(cameraPos, //Position 
 								glm::vec3(0.0f, 0.0f, 0.0f), 	//Look direction
 								glm::vec3(0.0f, 1.0f, 0.0f) );	//Up
 
@@ -63,7 +65,7 @@ int main(int argc, char** args)
 		
 		angle += 0.05f; if(angle >= 6.28) angle = 0.0f;
 
-		obj.draw(p, 2);
+		obj.draw(cameraPos, p, 1);
 
 		//Swap buffer and query events
 		glfwSwapBuffers(window);

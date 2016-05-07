@@ -18,16 +18,20 @@ Object::Object()
 	this->vertex_array_id = 0;
 	this->h_kA = this->h_kD = this->h_kS = 0;
 	this->h_cA = this->h_cD = this->h_cS = 0;
-	
+	this->h_shininess = 0;
+
 	//Transformation
 	this->vp = NULL;
 	this->model = glm::mat4(1.0f);
 
 	//Random default value
-	this->kA = this->kD = this->kS = 1.0f;
-	this->colorA = glm::vec3(1.0f, 0.0f, 0.0f);
-	this->colorD = glm::vec3(0.0f, 1.0f, 0.0f);
-	this->colorS = glm::vec3(0.0f, 0.0f, 1.0f);
+	this->kA = 0.2f;
+	this->kD = 0.5f;
+	this->kS = 1.0f;
+	this->colorA = glm::vec3(0.0f, 0.0f, 1.0f);
+	this->colorD = glm::vec3(0.0f, 0.0f, 1.0f);
+	this->colorS = glm::vec3(1.0f, 1.0f, 1.0f);
+	this->shininess = 20.0f;
 }
 
 void Object::setViewProjection(glm::mat4* vp)
@@ -118,13 +122,14 @@ void Object::load_glsl_parameters()
 	this->h_cD = glGetUniformLocation(this->shader_id, "model.cD");
 	this->h_cA = glGetUniformLocation(this->shader_id, "model.cA");
 	this->h_cS = glGetUniformLocation(this->shader_id, "model.cS");
+	this->h_shininess = glGetUniformLocation(this->shader_id, "model.shininess");
 
 	this->h_model = glGetUniformLocation(this->shader_id, "model.transform");
 	
 	this->h_vp = glGetUniformLocation(this->shader_id, "vp");
 }
 
-void Object::draw(PointLight pl[], unsigned int n)
+void Object::draw(glm::vec3 cameraPos, PointLight pl[], unsigned int n)
 {
 	//Install model shader
 	glUseProgram(this->shader_id);
@@ -133,9 +138,10 @@ void Object::draw(PointLight pl[], unsigned int n)
 	glUniformMatrix4fv(this->h_model, 1, GL_FALSE, &this->model[0][0]);
 
 	//material settings
-	glUniform1f(this->h_kD, 1.0f); load_vec3_uniform(this->h_cD, this->colorD);
-	glUniform1f(this->h_kA, 0.2f); load_vec3_uniform(this->h_cA, this->colorA);
-	glUniform1f(this->h_kS, 0.0f); load_vec3_uniform(this->h_cS, this->colorS);
+	glUniform1f(this->h_kD, this->kD); load_vec3_uniform(this->h_cD, this->colorD);
+	glUniform1f(this->h_kA, this->kA); load_vec3_uniform(this->h_cA, this->colorA);
+	glUniform1f(this->h_kS, this->kS); load_vec3_uniform(this->h_cS, this->colorS);
+	glUniform1f(this->h_shininess, this->shininess);
 	
 	//View-Projection matrix
 	glUniformMatrix4fv(this->h_vp, 1, GL_FALSE, &(*this->vp)[0][0]);
@@ -152,6 +158,10 @@ void Object::draw(PointLight pl[], unsigned int n)
 		glUniform1f(loc+1, pl[i].intensity);
 		glUniform1f(loc+2, pl[i].falloff);
 	}
+
+	//camera position
+	GLint camPosLocation = glGetUniformLocation(this->shader_id, "eye");
+	glUniform3f(camPosLocation, cameraPos[0], cameraPos[1], cameraPos[2]);
 
 	//Load data for each model
 	glBindVertexArray(this->vertex_array_id);

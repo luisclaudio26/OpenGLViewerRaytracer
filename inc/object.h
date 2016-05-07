@@ -51,7 +51,7 @@ private:
 	//--------------------------------
 	//------- Material setting -------
 	//--------------------------------
-	float kA, kD, kS;
+	float kA, kD, kS, shininess;
 	glm::vec3 colorA, colorD, colorS;
 
 	//------------------------------------
@@ -61,6 +61,7 @@ private:
 	
 	GLint h_kA, h_kD, h_kS; //Handles to material settings
 	GLint h_cA, h_cD, h_cS;
+	GLint h_shininess;
 
 	GLint h_vp; //Handle to view-projection
 	GLint h_model; //Handle to model transformation
@@ -81,7 +82,7 @@ public:
 	void load(const std::string& model, const std::string& shader);
 	
 	//Get an array with the point lights
-	void draw(PointLight pl[], unsigned int n);
+	void draw(glm::vec3 cameraPos, PointLight pl[], unsigned int n);
 
 	//define View-Projection matrix of our scene
 	void setViewProjection(glm::mat4* vp);
