@@ -51,8 +51,8 @@ void main()
 		diffuse_acc += (diffuse * light[i].intensity * model.kD) / lightFalloff;
 
 		//------- Compute diffuse component --------
-		vec3 reflected = normalize( reflect(pos2light, normal) );
-		vec3 pos2eye = normalize( light[i].pos - eye );
+		vec3 reflected = normalize( reflect(-pos2light, normal) );
+		vec3 pos2eye = normalize( eye - pos );
 		float spec = dot(reflected, pos2eye);
 
 		//If specular factor is less then zero (i.e., we're not looking directly to

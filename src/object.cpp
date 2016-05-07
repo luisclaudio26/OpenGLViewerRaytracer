@@ -201,13 +201,16 @@ void Object::process_line(const std::string& line)
 		int v2, vt2, vn2;
 		int v3, vt3, vn3;
 
-		//sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d", &v1, &vt1, &vn1,
-		//													&v2, &vt2, &vn2,
-		//													&v3, &vt3, &vn3);
+		/*
+		sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d", &v1, &vt1, &vn1,
+															&v2, &vt2, &vn2,
+															&v3, &vt3, &vn3);
+		*/
 
 		sscanf(line.c_str(), "f %d//%d %d//%d %d//%d", &v1, &vn1,
 														&v2, &vn2,
 														&v3, &vn3);
+		
 
 		Vertex V1, V2, V3;
 		V1.pos = vertice[v1-1];
