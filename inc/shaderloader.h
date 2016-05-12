@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <cstring>
+#include <cstdlib>
 
 #include <GL/glew.h>
 #include <glfw3.h>
@@ -14,11 +15,16 @@
 
 class ShaderLoader
 {
-public:
+private:
 	static const GLchar* load_code(const std::string& path)
 	{
 		std::fstream file;
 		file.open(path, std::ios_base::in);
+
+		if(!file.is_open()) {
+			std::cout<<"No such shader code!"<<std::endl;
+			exit(0);
+		}
 
 		std::stringstream ss;
 		
@@ -61,6 +67,7 @@ public:
 		return id;
 	}
 
+public:
 	static GLuint load(const std::string& path)
 	{
 		std::string v_path(path); 

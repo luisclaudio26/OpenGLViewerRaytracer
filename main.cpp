@@ -48,6 +48,13 @@ int main(int argc, char** args)
 	//----------------------------------
 	//-------- Geometry setting --------
 	//----------------------------------
+	if(argc != 3)
+	{
+		std::cout<<"Wrong input! Usage: "<<std::endl<<std::endl;
+		std::cout<<"	./render path/to/file.obj gouraud|flat"<<std::endl<<std::endl;
+		return 0;
+	}
+
 	std::string filepath(args[1]);
 	std::string shading(args[2]);
 

@@ -1,6 +1,8 @@
 #include "../inc/object.h"
 #include "../inc/shaderloader.h"
 
+#include <cstdlib>
+
 //---------------------------------------------------
 //-------------------- INTERNAL ---------------------
 //---------------------------------------------------
@@ -45,6 +47,11 @@ void Object::setViewProjection(glm::mat4* vp)
 void Object::load(const std::string& file, const std::string& shader)
 {
 	std::fstream in; in.open(file);
+
+	if(!in.is_open()) {
+		std::cout<<"No such .obj file!"<<std::endl;
+		exit(0);
+	}
 
 	while(!in.eof())
 	{
