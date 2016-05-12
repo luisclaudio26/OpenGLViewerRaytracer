@@ -48,8 +48,11 @@ int main(int argc, char** args)
 	//----------------------------------
 	//-------- Geometry setting --------
 	//----------------------------------
+	std::string filepath(args[1]);
+	std::string shading(args[2]);
+
 	Object obj;
-	obj.load("./obj/f16/f16.obj", "./shaders/flat");
+	obj.load(filepath, std::string("./shaders/") + shading);
 	obj.setViewProjection(&vpMatrix);
 
 	do
@@ -57,12 +60,11 @@ int main(int argc, char** args)
 		//Clear screen -> this function also clears stencil and depth buffer
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
+		//Rotate lights
 		glm::mat4 rot1 = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
 		glm::mat4 rot2 = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 0.0f, 1.0f));
-		
 		p[0].pos = glm::vec3( rot1 * glm::vec4(p0, 1.0f) );
 		p[1].pos = glm::vec3( rot2 * glm::vec4(p1, 1.0f) );
-		
 		angle += 0.05f; if(angle >= 6.28) angle = 0.0f;
 
 		obj.draw(cameraPos, p, 2);
