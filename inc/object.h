@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <cstdio>
+#include <regex>
 
 #include <GL/glew.h>
 #include <glfw3.h>
@@ -30,6 +31,11 @@ typedef struct {
 	Vec3 pos, n;
 	Vec2 tex;
 } Vertex;
+
+//Constants for regex matching controlling
+#define NONE 		0
+#define TEX_INFO 	1
+#define NO_TEX_INFO 2
 
 class Object
 {
@@ -59,12 +65,12 @@ private:
 	//------------------------------------
 	GLuint shader_id, vertex_array_id;
 	
-	GLint h_kA, h_kD, h_kS; //Handles to material settings
+	GLint h_kA, h_kD, h_kS; //Handlers to material settings
 	GLint h_cA, h_cD, h_cS;
 	GLint h_shininess;
 
-	GLint h_vp; //Handle to view-projection
-	GLint h_model; //Handle to model transformation
+	GLint h_vp; //Handler to view-projection
+	GLint h_model; //Handler to model transformation
 
 	//-----------------------------------
 	//------- Internal operations -------
@@ -72,6 +78,10 @@ private:
 	void process_line(const std::string& line);
 	void load_into_opengl(const std::string& shader);
 	void load_glsl_parameters();
+
+	//This pattern will accept lines like "f x/y/z x/y/z x/y/z"
+	std::regex tex_info_regex;
+	int tex_info_flag;
 
 public:
 	Object();

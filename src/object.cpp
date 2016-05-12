@@ -1,6 +1,5 @@
 #include "../inc/object.h"
 #include "../inc/shaderloader.h"
-#include <regex>
 
 //---------------------------------------------------
 //-------------------- INTERNAL ---------------------
@@ -33,6 +32,9 @@ Object::Object()
 	this->colorD = glm::vec3(0.0f, 0.0f, 1.0f);
 	this->colorS = glm::vec3(1.0f, 1.0f, 1.0f);
 	this->shininess = 20.0f;
+
+	this->tex_info_regex = std::regex("f (([[:digit:]]+)/([[:digit:]]+)/([[:digit:]]+) ){2}(([[:digit:]]+)/([[:digit:]]+)/([[:digit:]]+))");
+	this->tex_info_flag = NONE;
 }
 
 void Object::setViewProjection(glm::mat4* vp)
@@ -196,6 +198,16 @@ void Object::process_line(const std::string& line)
 	}
 	else if(!flag.compare("f")) {
 
+		//Define what kind of line we're parsing. Notice
+		//that this code snippet is called only once, i.e.,
+		//we match the first line only, so we won't waste time
+		//processing lines we already know will be rejected/accepted
+		if(this->tex_info_flag == NONE)
+			if( std::regex_match(line, this->tex_info_regex) ) 
+				this->tex_info_flag = TEX_INFO;
+			else 
+				this->tex_info_flag = NO_TEX_INFO;
+
 		//This code snipped won't work if texture coordinate is not informed!
 		//Fix this after.
 		int v1, vt1, vn1;
@@ -203,22 +215,17 @@ void Object::process_line(const std::string& line)
 		int v3, vt3, vn3;
 		bool texInfo = false;
 
-		//This pattern matches against a line like "f x/y/z x/y/z x/y/z"
-		std::regex pattern("f (([[:digit:]]+)/([[:digit:]]+)/([[:digit:]]+) ){2}(([[:digit:]]+)/([[:digit:]]+)/([[:digit:]]+))");
-
-		if( std::regex_match(line, pattern) )
+		if( this->tex_info_flag == TEX_INFO )
 		{
 			sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d", &v1, &vt1, &vn1,
 																&v2, &vt2, &vn2,
 																&v3, &vt3, &vn3);
 			texInfo = true;
 		}
-		else
-		{
+		else if(this->tex_info_flag == NO_TEX_INFO)
 			sscanf(line.c_str(), "f %d//%d %d//%d %d//%d", &v1, &vn1,
 															&v2, &vn2,
 															&v3, &vn3);
-		}
 
 		Vertex V1, V2, V3;
 		V1.pos = vertice[v1-1];
