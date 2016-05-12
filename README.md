@@ -1,5 +1,7 @@
-# CG-Project [https://github.com/luisclaudio26/CG-Project/]
+# CG-Project 
 Project for Computer Graphics class in UFRN, 2016.
+
+[https://github.com/luisclaudio26/CG-Project/]
 
 1. Compiling
 
@@ -8,7 +10,9 @@ Once you have unzipped the code, simply MAKE it.
 [Skip this if you don't care about what I did inside the makefile]
 
 Notice that this operation takes an amount of time which is maybe too much for such a small code, but it seems that C++ 11 regular expressions are parsed (have their automats built) in compile time, so the extra time. This is not important, anyway.
+
 Obviously I linked the GL, GLFW and GLEW libraries, so make sure you have the needed headers and SDKs installed. I had to manually set the include paths for GLFW (as you can see in the -I /usr/include/GLFW line); I'm running Fedora 21, so I do not know whether one should always manually do this or not.
+
 Finally, notice that I'm compiling things with NO compiler optimization, because it makes debugging with GDB easier.
 
 2. Running
