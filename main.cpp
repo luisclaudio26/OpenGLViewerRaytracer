@@ -49,7 +49,7 @@ int main(int argc, char** args)
 	//-------- Geometry setting --------
 	//----------------------------------
 	Object obj;
-	obj.load("./obj/tyra.obj", "./shaders/flat");
+	obj.load("./obj/f16/f16.obj", "./shaders/flat");
 	obj.setViewProjection(&vpMatrix);
 
 	do

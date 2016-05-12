@@ -1,5 +1,6 @@
 #include "../inc/object.h"
 #include "../inc/shaderloader.h"
+#include <regex>
 
 //---------------------------------------------------
 //-------------------- INTERNAL ---------------------
@@ -200,30 +201,43 @@ void Object::process_line(const std::string& line)
 		int v1, vt1, vn1;
 		int v2, vt2, vn2;
 		int v3, vt3, vn3;
+		bool texInfo = false;
 
-		/*
-		sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d", &v1, &vt1, &vn1,
-															&v2, &vt2, &vn2,
-															&v3, &vt3, &vn3);
-		*/
+		//This pattern matches against a line like "f x/y/z x/y/z x/y/z"
+		std::regex pattern("f (([[:digit:]]+)/([[:digit:]]+)/([[:digit:]]+) ){2}(([[:digit:]]+)/([[:digit:]]+)/([[:digit:]]+))");
 
-		sscanf(line.c_str(), "f %d//%d %d//%d %d//%d", &v1, &vn1,
-														&v2, &vn2,
-														&v3, &vn3);
-		
+		if( std::regex_match(line, pattern) )
+		{
+			sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d", &v1, &vt1, &vn1,
+																&v2, &vt2, &vn2,
+																&v3, &vt3, &vn3);
+			texInfo = true;
+		}
+		else
+		{
+			sscanf(line.c_str(), "f %d//%d %d//%d %d//%d", &v1, &vn1,
+															&v2, &vn2,
+															&v3, &vn3);
+		}
 
 		Vertex V1, V2, V3;
 		V1.pos = vertice[v1-1];
 		V1.n = normal[vn1-1];
-		//V1.tex = texture[vt1-1];
-
+		V1.tex = (Vec2){-1.0f, -1.0f};
+		
 		V2.pos = vertice[v2-1];
 		V2.n = normal[vn2-1];
-		//V2.tex = texture[vt2-1];
-
+		V2.tex = (Vec2){-1.0f, -1.0f};
+		
 		V3.pos = vertice[v3-1];
 		V3.n = normal[vn3-1];
-		//V3.tex = texture[vt3-1];
+		V3.tex = (Vec2){-1.0f, -1.0f};
+
+		if(texInfo) {
+			V1.tex = texture[vt1-1];
+			V2.tex = texture[vt2-1];
+			V3.tex = texture[vt3-1];
+		}
 
 		out_vertices.push_back(V1);
 		out_vertices.push_back(V2);
