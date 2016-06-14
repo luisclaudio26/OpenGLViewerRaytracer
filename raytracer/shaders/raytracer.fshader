@@ -21,6 +21,7 @@ struct _sphere {
 
 struct _pointlight {
 	vec3 pos;
+	float falloff;
 	float k; //Intensity
 };
 
@@ -83,10 +84,16 @@ void main()
 			vec3 inter = t*p;
 			vec3 normal = normalize(inter - S1.pos);
 
-			//Phong model
-			vec3 diff = normalize(L1.pos - inter);
+			//-------- Phong model --------
+			//ambient light
+			sample_color = S1.M.kA * S1.M.color;
 
-			sample_color = diff;
+			//diffuse light
+			vec3 inter2light = L1.pos - inter;
+			float diff = max( dot(normalize(inter2light), normal), 0.0f);
+			float fo = L1.falloff / dot(inter2light, inter2light);
+
+			sample_color = sample_color + (diff * fo * S1.M.kD) * S1.M.color;
 		}
 	}
 }

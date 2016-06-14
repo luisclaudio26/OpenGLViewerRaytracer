@@ -6,6 +6,7 @@
 typedef struct {
 	glm::vec3 pos;
 	float k; //Intensity
+	float falloff;
 } PointLight;
 
 #endif
