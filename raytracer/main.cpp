@@ -111,8 +111,6 @@ int main(int argc, char** args)
 	S[0].pos = glm::vec3( cam_align*glm::vec4(S[0].pos, 1.0f) );
 	S[1].pos = glm::vec3( cam_align*glm::vec4(S[1].pos, 1.0f) );
 
-	std::cout<<glm::to_string(S[0].pos)<<", "<<glm::to_string(S[1].pos)<<endl;
-
 	do
 	{
 		//Clear screen -> this function also clears stencil and depth buffer

@@ -55,7 +55,7 @@ out vec3 sample_color;
 //--------------------------------------------------
 //---------------------- CODE ----------------------
 //--------------------------------------------------
-void intersect_with_sphere(in vec3 p, in _sphere S, out float t)
+void intersect_with_sphere(in vec3 o, in vec3 p, in _sphere S, out float t)
 {
 	//REMEMBER! One must really define the OUT variables here,
 	//it won't retain the value it has outside this function
@@ -63,8 +63,8 @@ void intersect_with_sphere(in vec3 p, in _sphere S, out float t)
 
 	//Compute intersection with sphere
 	float a = dot(p,p);
-	float b = -2*dot(p, S.pos);
-	float c = dot(S.pos, S.pos) - S.radius*S.radius;
+	float b = 2*dot(p, o-S.pos);
+	float c = dot(S.pos-o, S.pos-o) - S.radius*S.radius;
 	float D = b*b - 4*a*c;
 
 	if(D > 0.0f)
@@ -74,6 +74,22 @@ void intersect_with_sphere(in vec3 p, in _sphere S, out float t)
 		float t2 = (-b + sqrt(D))/2*a;
 		t = min(t1, t2); //TODO: what about negative t? Fix after
 	}
+}
+
+void point_color(in vec3 intersection, in _sphere S, out vec3 color)
+{
+	vec3 normal = normalize(intersection - S.pos);
+
+	//-------- Phong model --------
+	//ambient light
+	color = S.M.kA * S.M.color;
+
+	//diffuse light
+	vec3 inter2light = L1.pos - intersection;
+	float diff = max( dot(normalize(inter2light), normal), 0.0f);
+	float fo = L1.falloff / dot(inter2light, inter2light);
+
+	color = color + (diff * fo * S.M.kD) * S.M.color;
 }
 
 void main()
@@ -92,8 +108,7 @@ void main()
 	for(int i = 0; i < 2; i++)
 	{
 		float t_aux;
-
-		intersect_with_sphere(p, S[i], t_aux);
+		intersect_with_sphere(vec3(0.0f, 0.0f, 0.0f), p, S[i], t_aux);
 
 		if(t_aux < t)
 		{
@@ -105,18 +120,13 @@ void main()
 	//If we intersected something
 	if(sphere_id != -1)
 	{
-		vec3 inter = t*p;
-		vec3 normal = normalize(inter - S[sphere_id].pos);
+		vec3 inter_color;
+		point_color(t*p, S[sphere_id], inter_color);
 
-		//-------- Phong model --------
-		//ambient light
-		sample_color = sample_color + S[sphere_id].M.kA * S[sphere_id].M.color;
+		//cast ray on reflection direction
 
-		//diffuse light
-		vec3 inter2light = L1.pos - inter;
-		float diff = max( dot(normalize(inter2light), normal), 0.0f);
-		float fo = L1.falloff / dot(inter2light, inter2light);
 
-		sample_color = sample_color + (diff * fo * S[sphere_id].M.kD) * S[sphere_id].M.color;
+
+		sample_color = inter_color;
 	}
 }
