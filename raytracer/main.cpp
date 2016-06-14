@@ -24,7 +24,7 @@ int main(int argc, char** args)
 	//-------- View-Projection settings --------
 	//------------------------------------------
 	Camera cam;
-	cam.pos = glm::vec3(8.0f, 2.0f, 0.0f);
+	cam.pos = glm::vec3(7.0f, 2.0f, 0.0f);
 	cam.look_at = glm::vec3(0.0f, 0.0f, 0.0f) - cam.pos;
 	cam.up = glm::vec3(0.0f, 1.0f, 0.0f);
 	cam.d = 1.0f;
@@ -37,24 +37,24 @@ int main(int argc, char** args)
 	//-------- Lighting ---------
 	//---------------------------
 	PointLight PL1; PL1.k = 1.0f;
-					PL1.falloff = 5.0f;
-					PL1.pos = glm::vec3(5.0f, 3.0f, 0.0f);
+					PL1.falloff = 2.0f;
+					PL1.pos = glm::vec3(2.0f, 1.8f, 0.0f);
 
 	//----------------------------------
 	//-------- Geometry setting --------
 	//----------------------------------
 	Sphere S[2]; 	
 
-	S[0].radius = 3.0f;
+	S[0].radius = 1.0f;
 	S[0].pos = glm::vec3(0.0f, 0.0f, 0.0f);
 
-	S[1].radius = 3.0f;
-	S[1].pos = glm::vec3(5.0f, 5.0f, 0.0f);
+	S[1].radius = 1.0f;
+	S[1].pos = glm::vec3(2.0f, 0.0f, -2.0f);
 
-	Material M1; 	M1.color[0] = 0.5f;
-					M1.color[1] = 0.3f;
+	Material M1; 	M1.color[0] = 1.0f;
+					M1.color[1] = 0.0f;
 					M1.color[2] = 0.0f;
-					M1.kA = 0.2f;
+					M1.kA = 0.3f;
 					M1.kD = 0.8f;
 					M1.kS = 0.4f;
 					M1.shininess = 10.0f;
