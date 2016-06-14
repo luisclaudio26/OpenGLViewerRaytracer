@@ -1,8 +1,10 @@
 #ifndef _POINT_LIGHT_H_
 #define _POINT_LIGHT_H_
 
+#include <glm/glm.hpp>
+
 typedef struct {
-	float pos[3];
+	glm::vec3 pos;
 	float k; //Intensity
 } PointLight;
 

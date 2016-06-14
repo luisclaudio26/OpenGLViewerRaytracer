@@ -2,13 +2,17 @@
 #include <glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include <iostream>
 #include <cstring>
+using std::cout;
+using std::endl;
 
 #include "./inc/sphere.h"
 #include "./inc/pointlight.h"
 #include "./inc/shaderloader.h"
+#include "./inc/camera.h"
 
 GLFWwindow* setup();
 
@@ -19,34 +23,30 @@ int main(int argc, char** args)
 	//------------------------------------------
 	//-------- View-Projection settings --------
 	//------------------------------------------
-	glm::vec3 cameraPos = glm::vec3(5.0f, 1.0f, 0.0f);
+	Camera cam;
+	cam.pos = glm::vec3(15.0f, 2.0f, 0.0f);
+	cam.look_at = glm::vec3(0.0f, 0.0f, 0.0f) - cam.pos;
+	cam.up = glm::vec3(0.0f, 1.0f, 0.0f);
+	cam.d = 5.0f;
+	cam.w = 1.0f;
+	cam.h = 1.0f;
 
-	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.01f, 20.0f);
-	glm::mat4 View = glm::lookAt(cameraPos, //Position 
-								glm::vec3(0.0f, 0.0f, 0.0f), 	//Look direction
-								glm::vec3(0.0f, 1.0f, 0.0f) );	//Up
-
-	//Pre-multiply projection and view
-	glm::mat4 vpMatrix = Projection * View;
+	glm::mat4 cam_align = world_to_camera(cam);
 
 	//---------------------------
 	//-------- Lighting ---------
 	//---------------------------
 	PointLight PL1; PL1.k = 1.0f;
-					PL1.pos[0] = 0.0f;
-					PL1.pos[1] = 5.0f;
-					PL1.pos[2] = 0.0f;
+					PL1.pos = glm::vec3(1.0f, 1.0f, 1.0f);
 
 	//----------------------------------
 	//-------- Geometry setting --------
 	//----------------------------------
 	Sphere S1; 	S1.radius = 1.0f;
-				S1.pos[0] = 0.0f;
-				S1.pos[1] = 0.0f;
-				S1.pos[2] = 0.0f;
+				S1.pos = glm::vec3(0.0f, 0.0f, 0.0f);
 
-	Material M1; 	M1.color[0] = 1.0f;
-					M1.color[1] = 0.0f;
+	Material M1; 	M1.color[0] = 0.5f;
+					M1.color[1] = 0.3f;
 					M1.color[2] = 0.0f;
 					M1.kA = 0.2f;
 					M1.kD = 0.4f;
@@ -96,24 +96,59 @@ int main(int argc, char** args)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
+	//-----------------------------------
+	//------- Preprocessing stage -------
+	//-----------------------------------
+	//Send objects to camera space (camera is origin,
+	//with up = y, look_at = -z and x = up x look_at)
+	PL1.pos = glm::vec3( cam_align*glm::vec4(PL1.pos, 1.0f) );
+	S1.pos = glm::vec3( cam_align*glm::vec4(S1.pos, 1.0f) );
+
+	std::cout<<glm::to_string(PL1.pos)<<endl;
+
 	do
 	{
 		//Clear screen -> this function also clears stencil and depth buffer
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
+		glUseProgram(raytracer);
+
 		//Load uniform data
 		GLuint sphere_color = glGetUniformLocation(raytracer, "S1.M.color");
+		glUniform3f(sphere_color, M1.color[0], M1.color[1], M1.color[2]);
+
 		GLuint sphere_kA = glGetUniformLocation(raytracer, "S1.M.kA");
+		glUniform1f(sphere_kA, M1.kA);
 
-		
+		GLuint sphere_kD = glGetUniformLocation(raytracer, "S1.M.kD");
+		glUniform1f(sphere_kD, M1.kD);
 
-		
+		GLuint sphere_radius = glGetUniformLocation(raytracer, "S1.radius");
+		glUniform1f(sphere_radius, S1.radius);
+
+		GLuint sphere_pos = glGetUniformLocation(raytracer, "S1.pos");
+		glUniform3f(sphere_pos, S1.pos[0], S1.pos[1], S1.pos[2]);
+
+		GLuint light_pos = glGetUniformLocation(raytracer, "L1.pos");
+		glUniform3f(light_pos, PL1.pos[0], PL1.pos[1], PL1.pos[2]);
+
+		GLuint light_k = glGetUniformLocation(raytracer, "L1.k");
+		glUniform1f(light_k, PL1.k);
+
+		GLuint film_w = glGetUniformLocation(raytracer, "filmW");
+		glUniform1f(film_w, cam.w);
+
+		GLuint film_h = glGetUniformLocation(raytracer, "filmH");
+		glUniform1f(film_h, cam.h);
+
+		GLuint film_d = glGetUniformLocation(raytracer, "filmD");
+		glUniform1f(film_d, cam.d);
 
 		//Draw
-		glUseProgram(raytracer);
 		glBindVertexArray(screen_vao);
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		glBindVertexArray(0);
+		
 		glUseProgram(0);
 
 		//Swap buffer and query events
