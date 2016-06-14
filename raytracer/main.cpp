@@ -43,8 +43,13 @@ int main(int argc, char** args)
 	//----------------------------------
 	//-------- Geometry setting --------
 	//----------------------------------
-	Sphere S1; 	S1.radius = 3.0f;
-				S1.pos = glm::vec3(0.0f, 0.0f, 0.0f);
+	Sphere S[2]; 	
+
+	S[0].radius = 3.0f;
+	S[0].pos = glm::vec3(0.0f, 0.0f, 0.0f);
+
+	S[1].radius = 3.0f;
+	S[1].pos = glm::vec3(5.0f, 5.0f, 0.0f);
 
 	Material M1; 	M1.color[0] = 0.5f;
 					M1.color[1] = 0.3f;
@@ -103,9 +108,10 @@ int main(int argc, char** args)
 	//Send objects to camera space (camera is origin,
 	//with up = y, look_at = -z and x = up x look_at)
 	PL1.pos = glm::vec3( cam_align*glm::vec4(PL1.pos, 1.0f) );
-	S1.pos = glm::vec3( cam_align*glm::vec4(S1.pos, 1.0f) );
+	S[0].pos = glm::vec3( cam_align*glm::vec4(S[0].pos, 1.0f) );
+	S[1].pos = glm::vec3( cam_align*glm::vec4(S[1].pos, 1.0f) );
 
-	std::cout<<glm::to_string(PL1.pos)<<endl;
+	std::cout<<glm::to_string(S[0].pos)<<", "<<glm::to_string(S[1].pos)<<endl;
 
 	do
 	{
@@ -115,20 +121,17 @@ int main(int argc, char** args)
 		glUseProgram(raytracer);
 
 		//Load uniform data
-		GLuint sphere_color = glGetUniformLocation(raytracer, "S1.M.color");
-		glUniform3f(sphere_color, M1.color[0], M1.color[1], M1.color[2]);
+		GLuint sphere_base = glGetUniformLocation(raytracer, "S[0].radius");
+		for(int i = 0; i < 2; i++)
+		{
+			GLuint sphere_id = sphere_base + i*5; //5 parameters per struct Sphere
 
-		GLuint sphere_kA = glGetUniformLocation(raytracer, "S1.M.kA");
-		glUniform1f(sphere_kA, M1.kA);
-
-		GLuint sphere_kD = glGetUniformLocation(raytracer, "S1.M.kD");
-		glUniform1f(sphere_kD, M1.kD);
-
-		GLuint sphere_radius = glGetUniformLocation(raytracer, "S1.radius");
-		glUniform1f(sphere_radius, S1.radius);
-
-		GLuint sphere_pos = glGetUniformLocation(raytracer, "S1.pos");
-		glUniform3f(sphere_pos, S1.pos[0], S1.pos[1], S1.pos[2]);
+			glUniform1f(sphere_id, S[i].radius);
+			glUniform3f(sphere_id+1, S[i].pos[0], S[i].pos[1], S[i].pos[2]);
+			glUniform1f(sphere_id+2, M1.kA);
+			glUniform1f(sphere_id+3, M1.kD);
+			glUniform3f(sphere_id+4, M1.color[0], M1.color[1], M1.color[2]);
+		}
 
 		GLuint light_pos = glGetUniformLocation(raytracer, "L1.pos");
 		glUniform3f(light_pos, PL1.pos[0], PL1.pos[1], PL1.pos[2]);
