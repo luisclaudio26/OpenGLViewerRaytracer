@@ -59,12 +59,12 @@ int main(int argc, char** args)
 
 	Material M[3]; 	
 
-	M[0].color[0] = 0.6f;
-	M[0].color[1] = 0.4f;
-	M[0].color[2] = 0.4f;
+	M[0].color[0] = 0.7f;
+	M[0].color[1] = 0.3f;
+	M[0].color[2] = 0.3f;
 	M[0].kA = 0.1f;
 	M[0].kD = 0.8f;
-	M[0].kS = 1.0f;
+	M[0].kS = 0.0f;
 	M[0].shininess = 10.0f;
 
 	M[1].color[0] = 0.0f;
@@ -72,7 +72,7 @@ int main(int argc, char** args)
 	M[1].color[2] = 0.0f;
 	M[1].kA = 0.1f;
 	M[1].kD = 0.8f;
-	M[1].kS = 0.0f;
+	M[1].kS = 0.7f;
 	M[1].shininess = 10.0f;
 
 	M[2].color[0] = 0.4f;
@@ -80,7 +80,7 @@ int main(int argc, char** args)
 	M[2].color[2] = 0.4f;
 	M[2].kA = 0.3f;
 	M[2].kD = 0.3f;
-	M[2].kS = 0.0f;
+	M[2].kS = 0.4f;
 	M[2].shininess = 10.0f;
 
 	//------------------------------
@@ -148,9 +148,9 @@ int main(int argc, char** args)
 		glUseProgram(raytracer);
 
 		//Animate stuff
-		//glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(1.0f, 0.0f, 0.0f));
-		//S[1].pos = glm::vec3( (t1*rot*t2) * glm::vec4(_pl1, 1.0f));
-		//angle += 0.08f; if(angle >= 6.28f) angle = 0.0f;
+		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(1.0f, 0.0f, 0.0f));
+		S[1].pos = glm::vec3( (t1*rot*t2) * glm::vec4(_pl1, 1.0f));
+		angle += 0.02f; if(angle >= 6.28f) angle = 0.0f;
 
 		//Load uniform data
 		GLuint sphere_base = glGetUniformLocation(raytracer, "S[0].radius");

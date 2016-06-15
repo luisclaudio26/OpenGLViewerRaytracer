@@ -175,6 +175,7 @@ void point_color_plane(in vec3 inter, in _plane P, out vec3 inter_color)
 
 	if(occluder_id == -1)
 	{
+		//ambient light
 		float diff = dot(normalize(inter2light), P.normal);
 		diff = max(diff, 0.0f);
 
@@ -245,6 +246,11 @@ void main()
 			point_color(bounce_inter, bounce_normal, bounce_id, bounce_type, bounce_color);
 		}
 
-		sample_color =  inter_color;
+		sample_color = inter_color;
+
+		if(obj_type == SPHERE)
+			sample_color += S[obj_id].M.kS * bounce_color;
+		else if(obj_type == PLANE)
+			sample_color += P[obj_id].M.kS * bounce_color;
 	}
 }
