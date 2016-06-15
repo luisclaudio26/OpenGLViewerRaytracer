@@ -75,9 +75,11 @@ void cast_ray(in vec3 o, in vec3 d, out int id, out int type, out float t);
 
 void point_color_sphere(in vec3 intersection, in vec3 normal, in vec3 eye2inter, in _sphere S, out vec3 color);
 void point_color_plane(in vec3 inter, in vec3 eye2inter, in _plane P, out vec3 inter_color);
-void point_color(in vec3 inter, in vec3 normal, in vec3 eye2inter, in int obj_id, in int obj_type, out vec3 inter_color);
+void point_color(in vec3 inter, in vec3 normal, in vec3 eye2inter, in _material obj_mat, out vec3 inter_color);
 
 void compute_normal(in vec3 intersection, in int obj_id, in int obj_type, out vec3 normal);
+
+void get_object_material(in int obj_id, in int obj_type, out _material obj_mat);
 
 void main()
 {
@@ -91,7 +93,7 @@ void main()
 	p.z = -filmD;
 
 	//this is computed from first to last intersection
-	int max_depth = 3;
+	int max_depth = 2;
 	vec3 ray_origin = vec3(0,0,0);
 	vec3 ray_dir = p;
 
@@ -109,13 +111,14 @@ void main()
 		else
 		{
 			//needed data
+			_material obj_mat; get_object_material(obj_id, obj_type, obj_mat);
 			vec3 inter = ray_origin + t*ray_dir;
 			vec3 normal; compute_normal(inter, obj_id, obj_type, normal);
 			vec3 eye2inter = inter - ray_origin;
 
 			//compute final color
 			vec3 color;
-			point_color(inter, normal, eye2inter, obj_id, obj_type, color);
+			point_color(inter, normal, eye2inter, obj_mat, color);
 
 			//add computed color to accumulator
 			sample_color += color;
@@ -128,6 +131,14 @@ void main()
 			max_depth -= 1;
 		}
 	}
+}
+
+void get_object_material(in int obj_id, in int obj_type, out _material obj_mat)
+{
+	if(obj_type == SPHERE)
+		obj_mat = S[obj_id].M;
+	else if(obj_type == PLANE)
+		obj_mat = P[obj_id].M;
 }
 
 void intersect_with_sphere(in vec3 o, in vec3 p, in _sphere S, out float t)
@@ -205,76 +216,6 @@ void cast_ray(in vec3 o, in vec3 d, out int id, out int type, out float t)
 	}
 }
 
-void point_color_sphere(in vec3 intersection, in vec3 normal, in vec3 eye2inter, in _sphere S, out vec3 color)
-{
-	//-------- Phong model --------
-	//ambient light
-	color = S.M.kA * S.M.color;
-	
-	for(int i = 0; i < N_LIGHTS; i++)
-	{
-		//cast shadow ray
-		vec3 inter2light = L[i].pos - intersection;
-
-		int occluder_id; float t; int dummy;
-		cast_ray(intersection+0.0001f*inter2light, inter2light, occluder_id, dummy, t);
-
-		//if no object is occluding the point
-		if(occluder_id == -1)
-		{
-			//light falloff
-			float fo = 1.0f / (L[i].falloff * dot(inter2light, inter2light));
-
-			//diffuse light
-			float diff = dot(normalize(inter2light), normal);
-			diff = max(diff, 0.0f);
-
-			color += (L[i].k * diff * S.M.kD) * S.M.color;
-
-			//specular light
-			vec3 ref_ray = reflect(-inter2light, normal);
-			float spec = dot(normalize(ref_ray), -eye2inter);
-			spec = max(spec, 0.0f);
-
-			color += (L[i].k * fo * pow(spec, S.M.shininess) * S.M.kS) * S.M.color;
-		}
-	}
-}
-
-void point_color_plane(in vec3 inter, in vec3 eye2inter, in _plane P, out vec3 inter_color)
-{
-	//------ Phong model -------
-	//Ambient light
-	inter_color = P.M.kA * P.M.color;
-
-	for(int i = 0; i < N_LIGHTS; i++)
-	{
-		//cast shadow ray
-		vec3 inter2light = L[i].pos - inter;
-		
-		int occluder_id; int dummy; float t;
-		cast_ray(inter+0.0001f*inter2light, inter2light, occluder_id, dummy, t);
-
-		if(occluder_id == -1)
-		{
-			float falloff = 1.0f / (L[i].falloff * dot(inter2light, inter2light));
-
-			//diffuse light
-			float diff = dot(normalize(inter2light), P.normal);
-			diff = max(diff, 0.0f);
-
-			inter_color += (L[i].k * diff * P.M.kD) * P.M.color;
-
-			//specular light
-			vec3 ref_ray = reflect(-normalize(inter2light), P.normal);
-			float spec = dot(ref_ray, -eye2inter);
-			spec = max(spec, 0.0f);
-
-			inter_color += (L[i].k * spec * falloff * P.M.kS) * P.M.color;
-		}
-	}
-}
-
 void compute_normal(in vec3 intersection, in int obj_id, in int obj_type, out vec3 normal)
 {
 	normal = vec3(0,0,0);
@@ -285,11 +226,40 @@ void compute_normal(in vec3 intersection, in int obj_id, in int obj_type, out ve
 		normal = normalize(P[obj_id].normal);
 }
 
-void point_color(in vec3 inter, in vec3 normal, in vec3 eye2inter, in int obj_id, in int obj_type, out vec3 inter_color)
+void point_color(in vec3 inter, in vec3 normal, in vec3 eye2inter, in _material obj_mat, out vec3 inter_color)
 {
-	if(obj_type == SPHERE)
-		point_color_sphere(inter, normal, eye2inter, S[obj_id], inter_color);
-	else if(obj_type == PLANE)
-		point_color_plane(inter, eye2inter, P[obj_id], inter_color);
+	//Ambient light
+	inter_color = obj_mat.kA * obj_mat.color;
+
+	for(int i = 0; i < N_LIGHTS; i++)
+	{
+		vec3 inter2light = L[i].pos - inter;
+	
+		//cast shadow ray	
+		int occluder_id; int dummy; float t;
+		cast_ray(inter + 0.0001f * inter2light, inter2light, occluder_id, dummy, t);
+
+		//diffuse and specular only if point of intersection is
+		//not occluded by another object
+		if(occluder_id == -1)
+		{
+			//light attenuation, proportional to 1/(a.d²)
+			float falloff = 1.0f / (L[i].falloff * dot(inter2light, inter2light));
+
+			//diffuse light
+			float diff = dot(normalize(inter2light), normal);
+			diff = max(diff, 0.0f);
+
+			inter_color += (L[i].k * diff * obj_mat.kD) * obj_mat.color;
+
+			//specular light
+			vec3 ref_ray = reflect(-normalize(inter2light), normal);
+			float spec = dot(ref_ray, -eye2inter);
+			spec = max(spec, 0.0f);
+
+			inter_color += (L[i].k * spec * falloff * obj_mat.kS) * obj_mat.color;
+		}
+	}
+
 }
 
