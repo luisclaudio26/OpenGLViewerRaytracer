@@ -72,14 +72,10 @@ void intersect_with_sphere(in vec3 o, in vec3 p, in _sphere S, out float t);
 void intersect_with_plane(in vec3 o, in vec3 d, in _plane P, out float t);
 
 void cast_ray(in vec3 o, in vec3 d, out int id, out int type, out float t);
-
-void point_color_sphere(in vec3 intersection, in vec3 normal, in vec3 eye2inter, in _sphere S, out vec3 color);
-void point_color_plane(in vec3 inter, in vec3 eye2inter, in _plane P, out vec3 inter_color);
 void point_color(in vec3 inter, in vec3 normal, in vec3 eye2inter, in _material obj_mat, out vec3 inter_color);
 
 void compute_normal(in vec3 intersection, in int obj_id, in int obj_type, out vec3 normal);
-
-void get_object_material(in int obj_id, in int obj_type, out _material obj_mat);
+void get_material(in int obj_id, in int obj_type, out _material obj_mat);
 
 void main()
 {
@@ -93,9 +89,10 @@ void main()
 	p.z = -filmD;
 
 	//this is computed from first to last intersection
-	int max_depth = 2;
+	int max_depth = 3;
 	vec3 ray_origin = vec3(0,0,0);
 	vec3 ray_dir = p;
+	float specularity = 1.0f;
 
 	while(max_depth > 0)
 	{
@@ -111,7 +108,7 @@ void main()
 		else
 		{
 			//needed data
-			_material obj_mat; get_object_material(obj_id, obj_type, obj_mat);
+			_material obj_mat; get_material(obj_id, obj_type, obj_mat);
 			vec3 inter = ray_origin + t*ray_dir;
 			vec3 normal; compute_normal(inter, obj_id, obj_type, normal);
 			vec3 eye2inter = inter - ray_origin;
@@ -121,11 +118,12 @@ void main()
 			point_color(inter, normal, eye2inter, obj_mat, color);
 
 			//add computed color to accumulator
-			sample_color += color;
+			sample_color += specularity * color;
 
-			//set parameters to next level of recursion
+			//set parameters for the next level of recursion
 			ray_dir = reflect(ray_dir, normal);
 			ray_origin = inter + normal * 0.001f; //avoid spurious intersections
+			specularity = obj_mat.kS;
 
 			//decrease depth counter
 			max_depth -= 1;
@@ -133,12 +131,22 @@ void main()
 	}
 }
 
-void get_object_material(in int obj_id, in int obj_type, out _material obj_mat)
+void get_material(in int obj_id, in int obj_type, out _material obj_mat)
 {
 	if(obj_type == SPHERE)
 		obj_mat = S[obj_id].M;
 	else if(obj_type == PLANE)
 		obj_mat = P[obj_id].M;
+}
+
+void compute_normal(in vec3 intersection, in int obj_id, in int obj_type, out vec3 normal)
+{
+	normal = vec3(0,0,0);
+
+	if(obj_type == SPHERE)
+		normal = normalize(intersection - S[obj_id].pos);
+	else if(obj_type == PLANE)
+		normal = normalize(P[obj_id].normal);
 }
 
 void intersect_with_sphere(in vec3 o, in vec3 p, in _sphere S, out float t)
@@ -216,16 +224,6 @@ void cast_ray(in vec3 o, in vec3 d, out int id, out int type, out float t)
 	}
 }
 
-void compute_normal(in vec3 intersection, in int obj_id, in int obj_type, out vec3 normal)
-{
-	normal = vec3(0,0,0);
-
-	if(obj_type == SPHERE)
-		normal = normalize(intersection - S[obj_id].pos);
-	else if(obj_type == PLANE)
-		normal = normalize(P[obj_id].normal);
-}
-
 void point_color(in vec3 inter, in vec3 normal, in vec3 eye2inter, in _material obj_mat, out vec3 inter_color)
 {
 	//Ambient light
@@ -262,4 +260,3 @@ void point_color(in vec3 inter, in vec3 normal, in vec3 eye2inter, in _material 
 	}
 
 }
-
