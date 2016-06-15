@@ -13,6 +13,7 @@ using std::endl;
 #include "./inc/pointlight.h"
 #include "./inc/shaderloader.h"
 #include "./inc/camera.h"
+#include "./inc/plane.h"
 
 GLFWwindow* setup();
 
@@ -37,8 +38,8 @@ int main(int argc, char** args)
 	//-------- Lighting ---------
 	//---------------------------
 	PointLight PL1; PL1.k = 1.0f;
-					PL1.falloff = 40.0f;
-					PL1.pos = glm::vec3(-3.0f, 0.0f, -7.0f);
+					PL1.falloff = 20.0f;
+					PL1.pos = glm::vec3(-3.0f, 1.5f, -7.0f);
 
 
 	//----------------------------------
@@ -50,11 +51,15 @@ int main(int argc, char** args)
 	S[0].pos = glm::vec3(2.0f, 0.0f, -7.0f);
 
 	S[1].radius = 1.0f;
-	S[1].pos = glm::vec3(-0.8f, 0.0f, -6.0f);
+	S[1].pos = glm::vec3(-1.5f, -0.5f, -9.0f);
 
-	Material M[2]; 	
+	Plane P;
+	P.normal = glm::vec3(0.0f, 1.0f, 0.0f);
+	P.d = 1.5f;
 
-	M[0].color[0] = 0.4f;
+	Material M[3]; 	
+
+	M[0].color[0] = 0.6f;
 	M[0].color[1] = 0.4f;
 	M[0].color[2] = 0.4f;
 	M[0].kA = 0.1f;
@@ -69,6 +74,14 @@ int main(int argc, char** args)
 	M[1].kD = 0.8f;
 	M[1].kS = 0.0f;
 	M[1].shininess = 10.0f;
+
+	M[2].color[0] = 0.4f;
+	M[2].color[1] = 0.4f;
+	M[2].color[2] = 0.4f;
+	M[2].kA = 0.3f;
+	M[2].kD = 0.3f;
+	M[2].kS = 0.0f;
+	M[2].shininess = 10.0f;
 
 	//------------------------------
 	//------- Shader setting -------
@@ -135,9 +148,9 @@ int main(int argc, char** args)
 		glUseProgram(raytracer);
 
 		//Animate stuff
-		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(1.0f, 0.0f, 0.0f));
-		S[1].pos = glm::vec3( (t1*rot*t2) * glm::vec4(_pl1, 1.0f));
-		angle += 0.08f; if(angle >= 6.28f) angle = 0.0f;
+		//glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(1.0f, 0.0f, 0.0f));
+		//S[1].pos = glm::vec3( (t1*rot*t2) * glm::vec4(_pl1, 1.0f));
+		//angle += 0.08f; if(angle >= 6.28f) angle = 0.0f;
 
 		//Load uniform data
 		GLuint sphere_base = glGetUniformLocation(raytracer, "S[0].radius");
@@ -151,6 +164,19 @@ int main(int argc, char** args)
 			glUniform1f(sphere_id+3, M[i].kD);
 			glUniform1f(sphere_id+4, M[i].kS);
 			glUniform3f(sphere_id+5, M[i].color[0], M[i].color[1], M[i].color[2]);
+		}
+
+		GLuint plane_base = glGetUniformLocation(raytracer, "P[0].d");
+		for(int i = 0; i < 1; i++)
+		{
+			GLuint plane_id = plane_base + i*6;
+
+			glUniform1f(plane_id, P.d);
+			glUniform3f(plane_id+1, P.normal[0], P.normal[1], P.normal[2]);
+			glUniform1f(plane_id+2, M[2].kA);
+			glUniform1f(plane_id+3, M[2].kD);
+			glUniform1f(plane_id+4, M[2].kS);
+			glUniform3f(plane_id+5, M[2].color[0], M[2].color[1], M[2].color[2]);
 		}
 
 		GLuint light_pos = glGetUniformLocation(raytracer, "L1.pos");
