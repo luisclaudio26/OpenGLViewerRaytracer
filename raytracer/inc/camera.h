@@ -14,7 +14,7 @@ typedef struct {
 
 glm::mat3 get_camera_coord_system(const Camera& cam)
 {
-	glm::vec3 W = glm::normalize( -cam.look_at);
+	glm::vec3 W = glm::normalize( -(cam.look_at - cam.pos) );
 	glm::vec3 V = glm::normalize( cam.up - glm::dot(cam.up, W)*W );
 	glm::vec3 U = glm::normalize( cross(V, W) );
 

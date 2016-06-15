@@ -26,7 +26,7 @@ int main(int argc, char** args)
 	//------------------------------------------
 	Camera cam;
 	cam.pos = glm::vec3(20.0f, 5.0f, 0.0f);
-	cam.look_at = glm::vec3(0.0, 0.0, 17.0) - cam.pos;
+	cam.look_at = glm::vec3(0.0, 0.0, 17.0);
 	cam.up = glm::vec3(0.0f, 1.0f, 0.0f);
 	cam.d = 0.8f;
 	cam.w = 1.3f;
@@ -138,17 +138,11 @@ int main(int argc, char** args)
 	//-----------------------------------
 	//Send objects to camera space (camera is origin,
 	//with up = y, look_at = -z and x = up x look_at)
-	PL[0].pos = glm::vec3( cam_align*glm::vec4(PL[0].pos, 1.0f) );
-	PL[1].pos = glm::vec3( cam_align*glm::vec4(PL[1].pos, 1.0f) );
-	S[0].pos = glm::vec3( cam_align*glm::vec4(S[0].pos, 1.0f) );
-	S[1].pos = glm::vec3( cam_align*glm::vec4(S[1].pos, 1.0f) );
-	
-	glm::vec4 _p = glm::vec4(P.normal, P.d);
-	_p = glm::inverse(glm::transpose(cam_align)) * _p;
-	P.normal = glm::vec3( _p[0], _p[1], _p[2] );
-	P.d = _p[3];
+	for(int i = 0; i < N_SPHERES; i++) transform_sphere(S[i], cam_align);
+	for(int i = 0; i < N_LIGHTS; i++) transform_pointlight(PL[i], cam_align);
+	transform_plane(P, cam_align);
 
-
+	//----- Animation stuff ------
 	glm::vec3 _pl1 = glm::vec3(S[1].pos.x, S[1].pos.y, S[1].pos.z);
 	glm::mat4 t1 = glm::translate(glm::mat4(1.0f), S[1].pos);
 	glm::mat4 t2 = glm::translate(glm::mat4(1.0f), -S[1].pos);
@@ -161,7 +155,7 @@ int main(int argc, char** args)
 
 		glUseProgram(raytracer);
 
-		//Animate stuff
+		//------ Animate ball ------
 		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
 		S[1].pos = glm::vec3( rot * glm::vec4(_pl1, 1.0f));
 		angle += 0.007f; if(angle >= 6.28f) angle = 0.0f;
