@@ -36,9 +36,10 @@ int main(int argc, char** args)
 	//---------------------------
 	//-------- Lighting ---------
 	//---------------------------
-	PointLight PL1; PL1.k = 1.0f;
+	PointLight PL1; PL1.k = 0.4f;
 					PL1.falloff = 2.0f;
-					PL1.pos = glm::vec3(2.0f, 1.8f, 0.0f);
+					PL1.pos = glm::vec3(2.0f, 1.5f, 0.0f);
+
 
 	//----------------------------------
 	//-------- Geometry setting --------
@@ -46,18 +47,28 @@ int main(int argc, char** args)
 	Sphere S[2]; 	
 
 	S[0].radius = 1.0f;
-	S[0].pos = glm::vec3(0.0f, 0.0f, 0.0f);
+	S[0].pos = glm::vec3(-2.0f, 0.0f, -2.0f);
 
 	S[1].radius = 1.0f;
-	S[1].pos = glm::vec3(2.0f, 0.0f, -2.0f);
+	S[1].pos = glm::vec3(0.0f, 0.0f, 2.0f);
 
-	Material M1; 	M1.color[0] = 1.0f;
-					M1.color[1] = 0.0f;
-					M1.color[2] = 0.0f;
-					M1.kA = 0.3f;
-					M1.kD = 0.8f;
-					M1.kS = 0.4f;
-					M1.shininess = 10.0f;
+	Material M[2]; 	
+
+	M[0].color[0] = 1.0f;
+	M[0].color[1] = 0.0f;
+	M[0].color[2] = 0.0f;
+	M[0].kA = 0.1f;
+	M[0].kD = 0.8f;
+	M[0].kS = 0.7f;
+	M[0].shininess = 10.0f;
+
+	M[1].color[0] = 0.0f;
+	M[1].color[1] = 1.0f;
+	M[1].color[2] = 0.0f;
+	M[1].kA = 0.1f;
+	M[1].kD = 0.8f;
+	M[1].kS = 0.0f;
+	M[1].shininess = 10.0f;
 
 	//------------------------------
 	//------- Shader setting -------
@@ -111,6 +122,8 @@ int main(int argc, char** args)
 	S[0].pos = glm::vec3( cam_align*glm::vec4(S[0].pos, 1.0f) );
 	S[1].pos = glm::vec3( cam_align*glm::vec4(S[1].pos, 1.0f) );
 
+	glm::vec3 _pl1 = glm::vec3(S[1].pos.x, S[1].pos.y, S[1].pos.z);
+	float angle = 0.0f;
 	do
 	{
 		//Clear screen -> this function also clears stencil and depth buffer
@@ -118,17 +131,23 @@ int main(int argc, char** args)
 
 		glUseProgram(raytracer);
 
+		//Animate stuff
+		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
+		S[1].pos = glm::vec3(rot * glm::vec4(_pl1, 1.0f));
+		angle += 0.01f; if(angle >= 6.28f) angle = 0.0f;
+
 		//Load uniform data
 		GLuint sphere_base = glGetUniformLocation(raytracer, "S[0].radius");
 		for(int i = 0; i < 2; i++)
 		{
-			GLuint sphere_id = sphere_base + i*5; //5 parameters per struct Sphere
+			GLuint sphere_id = sphere_base + i*6; //6 parameters per struct Sphere
 
 			glUniform1f(sphere_id, S[i].radius);
 			glUniform3f(sphere_id+1, S[i].pos[0], S[i].pos[1], S[i].pos[2]);
-			glUniform1f(sphere_id+2, M1.kA);
-			glUniform1f(sphere_id+3, M1.kD);
-			glUniform3f(sphere_id+4, M1.color[0], M1.color[1], M1.color[2]);
+			glUniform1f(sphere_id+2, M[i].kA);
+			glUniform1f(sphere_id+3, M[i].kD);
+			glUniform1f(sphere_id+4, M[i].kS);
+			glUniform3f(sphere_id+5, M[i].color[0], M[i].color[1], M[i].color[2]);
 		}
 
 		GLuint light_pos = glGetUniformLocation(raytracer, "L1.pos");
