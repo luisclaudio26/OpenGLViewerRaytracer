@@ -38,13 +38,13 @@ int main(int argc, char** args)
 	//-------- Lighting ---------
 	//---------------------------
 	PointLight PL[2]; const int N_LIGHTS = 2;
-	PL[0].k = 0.4f;
+	PL[0].k = 0.0f;
 	PL[0].falloff = 20.0f;
 	PL[0].pos = glm::vec3(-3.0f, 1.5f, -7.0f);
  
-	PL[1].k = 0.6f;
+	PL[1].k = 0.3f;
 	PL[1].falloff = 20.0f;
-	PL[1].pos = glm::vec3(0.0f, 3.0f, -10.0f);
+	PL[1].pos = glm::vec3(0.0f, 4.0f, -7.0f);
 
 	//----------------------------------
 	//-------- Geometry setting --------
@@ -68,8 +68,8 @@ int main(int argc, char** args)
 	M[0].color[2] = 0.3f;
 	M[0].kA = 0.1f;
 	M[0].kD = 0.8f;
-	M[0].kS = 0.2f;
-	M[0].shininess = 10.0f;
+	M[0].kS = 0.3f;
+	M[0].shininess = 0.4f;
 
 	M[1].color[0] = 0.0f;
 	M[1].color[1] = 1.0f;
@@ -77,15 +77,15 @@ int main(int argc, char** args)
 	M[1].kA = 0.1f;
 	M[1].kD = 0.8f;
 	M[1].kS = 1.0f;
-	M[1].shininess = 10.0f;
+	M[1].shininess = 0.3f;
 
 	M[2].color[0] = 0.4f;
 	M[2].color[1] = 0.4f;
 	M[2].color[2] = 0.4f;
 	M[2].kA = 0.3f;
 	M[2].kD = 0.3f;
-	M[2].kS = 0.0f;
-	M[2].shininess = 10.0f;
+	M[2].kS = 0.2f;
+	M[2].shininess = 20.0f;
 
 	//------------------------------
 	//------- Shader setting -------
@@ -145,10 +145,10 @@ int main(int argc, char** args)
 	P.normal = glm::vec3( _p[0], _p[1], _p[2] );
 	P.d = _p[3];
 
-	/*
+
 	glm::vec3 _pl1 = glm::vec3(PL[1].pos.x, PL[1].pos.y, PL[1].pos.z);
 	glm::mat4 t1 = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 1.5f, -7.0f));
-	glm::mat4 t2 = glm::translate(glm::mat4(1.0f), -glm::vec3(-3.0f, 1.5f, -7.0f)); */
+	glm::mat4 t2 = glm::translate(glm::mat4(1.0f), -glm::vec3(-3.0f, 1.5f, -7.0f));
 
 	float angle = 0.0f;
 	do
@@ -159,23 +159,23 @@ int main(int argc, char** args)
 		glUseProgram(raytracer);
 
 		//Animate stuff
-		/*
 		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
 		PL[1].pos = glm::vec3( (t1*rot*t2) * glm::vec4(_pl1, 1.0f));
-		angle += 0.02f; if(angle >= 6.28f) angle = 0.0f; */
+		angle += 0.02f; if(angle >= 6.28f) angle = 0.0f;
 
 		//Load uniform data
 		GLuint sphere_base = glGetUniformLocation(raytracer, "S[0].radius");
 		for(int i = 0; i < N_SPHERES; i++)
 		{
-			GLuint sphere_id = sphere_base + i*6; //6 parameters per struct Sphere
+			GLuint sphere_id = sphere_base + i*7; //6 parameters per struct Sphere
 
 			glUniform1f(sphere_id, S[i].radius);
 			glUniform3f(sphere_id+1, S[i].pos[0], S[i].pos[1], S[i].pos[2]);
 			glUniform1f(sphere_id+2, M[i].kA);
 			glUniform1f(sphere_id+3, M[i].kD);
 			glUniform1f(sphere_id+4, M[i].kS);
-			glUniform3f(sphere_id+5, M[i].color[0], M[i].color[1], M[i].color[2]);
+			glUniform1f(sphere_id+5, M[i].shininess);
+			glUniform3f(sphere_id+6, M[i].color[0], M[i].color[1], M[i].color[2]);
 		}
 
 		GLuint plane_base = glGetUniformLocation(raytracer, "P[0].d");
@@ -188,7 +188,8 @@ int main(int argc, char** args)
 			glUniform1f(plane_id+2, M[2].kA);
 			glUniform1f(plane_id+3, M[2].kD);
 			glUniform1f(plane_id+4, M[2].kS);
-			glUniform3f(plane_id+5, M[2].color[0], M[2].color[1], M[2].color[2]);
+			glUniform1f(plane_id+5, M[2].shininess);
+			glUniform3f(plane_id+6, M[2].color[0], M[2].color[1], M[2].color[2]);
 		}
 
 		GLuint light_base = glGetUniformLocation(raytracer, "L[0].k");

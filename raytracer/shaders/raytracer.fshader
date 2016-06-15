@@ -11,6 +11,7 @@ struct _material {
 	float kA; 
 	float kD;
 	float kS;
+	float shininess;
 	vec3 color;
 };
 
@@ -142,7 +143,7 @@ void cast_ray(in vec3 o, in vec3 d, out int id, out int type, out float t)
 	}
 }
 
-void point_color_sphere(in vec3 intersection, in vec3 normal, in _sphere S, out vec3 color)
+void point_color_sphere(in vec3 intersection, in vec3 normal, in vec3 eye2inter, in _sphere S, out vec3 color)
 {
 	//-------- Phong model --------
 	//ambient light
@@ -164,11 +165,18 @@ void point_color_sphere(in vec3 intersection, in vec3 normal, in _sphere S, out 
 			diff = max(diff, 0.0f);
 
 			color += (L[i].k * diff * S.M.kD) * S.M.color;
+
+			//specular light
+			vec3 ref_ray = reflect(-normalize(inter2light), normal);
+			float spec = dot(ref_ray, -eye2inter);
+			spec = max(spec, 0.0f);
+
+			color += (L[i].k * pow(spec, S.M.shininess) * S.M.kS) * S.M.color;
 		}
 	}
 }
 
-void point_color_plane(in vec3 inter, in _plane P, out vec3 inter_color)
+void point_color_plane(in vec3 inter, in vec3 eye2inter, in _plane P, out vec3 inter_color)
 {
 	//------ Phong model -------
 	//Ambient light
@@ -184,15 +192,20 @@ void point_color_plane(in vec3 inter, in _plane P, out vec3 inter_color)
 
 		if(occluder_id == -1)
 		{
+			float falloff = L[i].falloff / dot(inter2light, inter2light);
+
 			//diffuse light
 			float diff = dot(normalize(inter2light), P.normal);
 			diff = max(diff, 0.0f);
 
-			if(diff > 0.0f)
-			{
-				float falloff = L[i].falloff / dot(inter2light, inter2light);
-				inter_color += (L[i].k * diff *falloff * P.M.kD) * P.M.color;
-			}
+			inter_color += (L[i].k * diff *falloff * P.M.kD) * P.M.color;
+
+			//specular light
+			vec3 ref_ray = reflect(-normalize(inter2light), P.normal);
+			float spec = dot(ref_ray, -eye2inter);
+			spec = max(spec, 0.0f);
+
+			inter_color += (L[i].k * spec * falloff * P.M.kS) * P.M.color;
 		}
 	}
 }
@@ -207,12 +220,12 @@ void compute_normal(in vec3 intersection, in int obj_id, in int obj_type, out ve
 		normal = normalize(P[obj_id].normal);
 }
 
-void point_color(in vec3 inter, in vec3 normal, in int obj_id, in int obj_type, out vec3 inter_color)
+void point_color(in vec3 inter, in vec3 normal, in vec3 eye2inter, in int obj_id, in int obj_type, out vec3 inter_color)
 {
 	if(obj_type == SPHERE)
-		point_color_sphere(inter, normal, S[obj_id], inter_color);
+		point_color_sphere(inter, normal, eye2inter, S[obj_id], inter_color);
 	else if(obj_type == PLANE)
-		point_color_plane(inter, P[obj_id], inter_color);
+		point_color_plane(inter, eye2inter, P[obj_id], inter_color);
 }
 
 void main()
@@ -235,9 +248,10 @@ void main()
 	{
 		vec3 inter = t*p;
 		vec3 normal; compute_normal(inter, obj_id, obj_type, normal);
+		vec3 eye2inter = inter - p;
 
 		vec3 inter_color;
-		point_color(inter, normal, obj_id, obj_type, inter_color);
+		point_color(inter, normal, eye2inter, obj_id, obj_type, inter_color);
 
 		//cast ray on reflection direction
 		int bounce_id; int bounce_type; float bounce_t;
@@ -252,8 +266,9 @@ void main()
 		{
 			vec3 bounce_inter = bounce_t*ref_d + inter;
 			vec3 bounce_normal; compute_normal(bounce_inter, bounce_id, bounce_type, bounce_normal);
+			vec3 inter2binter = bounce_inter - inter;
 
-			point_color(bounce_inter, bounce_normal, bounce_id, bounce_type, bounce_color);
+			point_color(bounce_inter, bounce_normal, inter2binter, bounce_id, bounce_type, bounce_color);
 		}
 
 		sample_color = inter_color;
