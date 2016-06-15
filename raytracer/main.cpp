@@ -33,14 +33,14 @@ int main(int argc, char** args)
 	cam.h = 1.0f;
 
 	glm::mat4 cam_align = world_to_camera(cam);
-	cout<<glm::to_string(cam_align)<<endl;
 
 	//---------------------------
 	//-------- Lighting ---------
 	//---------------------------
-	PointLight PL1; PL1.k = 1.0f;
-					PL1.falloff = 20.0f;
-					PL1.pos = glm::vec3(-3.0f, 1.5f, -7.0f);
+	PointLight PL[1]; 
+	PL[0].k = 1.0f;
+	PL[0].falloff = 20.0f;
+	PL[0].pos = glm::vec3(-3.0f, 1.5f, -7.0f);
 
 
 	//----------------------------------
@@ -132,7 +132,7 @@ int main(int argc, char** args)
 	//-----------------------------------
 	//Send objects to camera space (camera is origin,
 	//with up = y, look_at = -z and x = up x look_at)
-	PL1.pos = glm::vec3( cam_align*glm::vec4(PL1.pos, 1.0f) );
+	PL[0].pos = glm::vec3( cam_align*glm::vec4(PL[0].pos, 1.0f) );
 	S[0].pos = glm::vec3( cam_align*glm::vec4(S[0].pos, 1.0f) );
 	S[1].pos = glm::vec3( cam_align*glm::vec4(S[1].pos, 1.0f) );
 	
@@ -185,14 +185,15 @@ int main(int argc, char** args)
 			glUniform3f(plane_id+5, M[2].color[0], M[2].color[1], M[2].color[2]);
 		}
 
-		GLuint light_pos = glGetUniformLocation(raytracer, "L1.pos");
-		glUniform3f(light_pos, PL1.pos[0], PL1.pos[1], PL1.pos[2]);
+		GLuint light_base = glGetUniformLocation(raytracer, "L[0].k");
+		for(int i = 0; i < 1; i++)
+		{
+			GLuint light_id = light_base + i*3;
 
-		GLuint light_k = glGetUniformLocation(raytracer, "L1.k");
-		glUniform1f(light_k, PL1.k);
-
-		GLuint light_falloff = glGetUniformLocation(raytracer, "L1.falloff");
-		glUniform1f(light_falloff, PL1.falloff);
+			glUniform1f(light_id, PL[i].k);
+			glUniform1f(light_id+1, PL[i].falloff);
+			glUniform3f(light_id+2, PL[i].pos[0], PL[i].pos[1], PL[i].pos[2]);
+		}
 
 		GLuint film_w = glGetUniformLocation(raytracer, "filmW");
 		glUniform1f(film_w, cam.w);

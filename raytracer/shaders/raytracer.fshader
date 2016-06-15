@@ -27,9 +27,9 @@ struct _plane {
 };
 
 struct _pointlight {
-	vec3 pos;
-	float falloff;
 	float k; //Intensity
+	float falloff;
+	vec3 pos;
 };
 
 //----------------------------------------------------------
@@ -37,10 +37,14 @@ struct _pointlight {
 //----------------------------------------------------------
 //Geometry info
 uniform _sphere S[2];
+#define N_SPHERES
+
 uniform _plane P[1];
+#define N_PLANES
 
 //Light info (we're considering ONE light source)
-uniform _pointlight L1;
+uniform _pointlight L[1];
+#define N_LIGHTS 1
 
 //Camera info
 uniform float filmW;
@@ -144,20 +148,23 @@ void point_color_sphere(in vec3 intersection, in vec3 normal, in _sphere S, out 
 	//ambient light
 	color = S.M.kA * S.M.color;
 	
-	//cast shadow ray
-	vec3 inter2light = L1.pos - intersection;
-
-	int occluder_id; float t; int dummy;
-	cast_ray(intersection+0.0001f*inter2light, inter2light, occluder_id, dummy, t);
-
-	//if no object is occluding the point
-	if(occluder_id == -1)
+	for(int i = 0; i < N_LIGHTS; i++)
 	{
-		//diffuse light
-		float diff = dot(normalize(inter2light), normal);
-		diff = max(diff, 0.0f);
+		//cast shadow ray
+		vec3 inter2light = L[i].pos - intersection;
 
-		color = color + (L1.k * diff * S.M.kD) * S.M.color;
+		int occluder_id; float t; int dummy;
+		cast_ray(intersection+0.0001f*inter2light, inter2light, occluder_id, dummy, t);
+
+		//if no object is occluding the point
+		if(occluder_id == -1)
+		{
+			//diffuse light
+			float diff = dot(normalize(inter2light), normal);
+			diff = max(diff, 0.0f);
+
+			color += (L[i].k * diff * S.M.kD) * S.M.color;
+		}
 	}
 }
 
@@ -167,24 +174,28 @@ void point_color_plane(in vec3 inter, in _plane P, out vec3 inter_color)
 	//Ambient light
 	inter_color = P.M.kA * P.M.color;
 
-	//cast shadow ray
-	vec3 inter2light = L1.pos - inter;
-	
-	int occluder_id; int dummy; float t;
-	cast_ray(inter+0.0001f*inter2light, inter2light, occluder_id, dummy, t);
-
-	if(occluder_id == -1)
+	for(int i = 0; i < N_LIGHTS; i++)
 	{
-		//diffuse light
-		float diff = dot(normalize(inter2light), P.normal);
-		diff = max(diff, 0.0f);
+		//cast shadow ray
+		vec3 inter2light = L[i].pos - inter;
+		
+		int occluder_id; int dummy; float t;
+		cast_ray(inter+0.0001f*inter2light, inter2light, occluder_id, dummy, t);
 
-		if(diff > 0.0f)
+		if(occluder_id == -1)
 		{
-			float falloff = L1.falloff / dot(inter2light, inter2light);
-			inter_color += (L1.k * diff *falloff * P.M.kD) * P.M.color;
+			//diffuse light
+			float diff = dot(normalize(inter2light), P.normal);
+			diff = max(diff, 0.0f);
+
+			if(diff > 0.0f)
+			{
+				float falloff = L[i].falloff / dot(inter2light, inter2light);
+				inter_color += (L[i].k * diff *falloff * P.M.kD) * P.M.color;
+			}
 		}
 	}
+
 }
 
 void compute_normal(in vec3 intersection, in int obj_id, in int obj_type, out vec3 normal)
