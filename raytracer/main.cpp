@@ -24,11 +24,11 @@ int main(int argc, char** args)
 	//-------- View-Projection settings --------
 	//------------------------------------------
 	Camera cam;
-	cam.pos = glm::vec3(7.0f, 2.0f, 0.0f);
-	cam.look_at = glm::vec3(0.0f, 0.0f, 0.0f) - cam.pos;
+	cam.pos = glm::vec3(0.0f, 0.0f, 0.0f);
+	cam.look_at = glm::vec3(0.0f, 0.0f, -1.0f);
 	cam.up = glm::vec3(0.0f, 1.0f, 0.0f);
 	cam.d = 1.0f;
-	cam.w = 1.0f;
+	cam.w = 1.3f;
 	cam.h = 1.0f;
 
 	glm::mat4 cam_align = world_to_camera(cam);
@@ -36,9 +36,9 @@ int main(int argc, char** args)
 	//---------------------------
 	//-------- Lighting ---------
 	//---------------------------
-	PointLight PL1; PL1.k = 0.4f;
-					PL1.falloff = 2.0f;
-					PL1.pos = glm::vec3(2.0f, 1.5f, 0.0f);
+	PointLight PL1; PL1.k = 1.0f;
+					PL1.falloff = 40.0f;
+					PL1.pos = glm::vec3(0.0f, 0.0f, -9.0f);
 
 
 	//----------------------------------
@@ -47,10 +47,10 @@ int main(int argc, char** args)
 	Sphere S[2]; 	
 
 	S[0].radius = 1.0f;
-	S[0].pos = glm::vec3(-2.0f, 0.0f, -2.0f);
+	S[0].pos = glm::vec3(2.0f, 0.0f, -7.0f);
 
 	S[1].radius = 1.0f;
-	S[1].pos = glm::vec3(0.0f, 0.0f, 2.0f);
+	S[1].pos = glm::vec3(-2.0f, 2.0f, -7.0f);
 
 	Material M[2]; 	
 
@@ -58,8 +58,8 @@ int main(int argc, char** args)
 	M[0].color[1] = 0.0f;
 	M[0].color[2] = 0.0f;
 	M[0].kA = 0.1f;
-	M[0].kD = 0.8f;
-	M[0].kS = 0.7f;
+	M[0].kD = 0.3f;
+	M[0].kS = 1.0f;
 	M[0].shininess = 10.0f;
 
 	M[1].color[0] = 0.0f;
@@ -123,6 +123,9 @@ int main(int argc, char** args)
 	S[1].pos = glm::vec3( cam_align*glm::vec4(S[1].pos, 1.0f) );
 
 	glm::vec3 _pl1 = glm::vec3(S[1].pos.x, S[1].pos.y, S[1].pos.z);
+	//glm::mat4 t1 = glm::translate(glm::mat4(1.0f), -glm::vec3(0.0f, 0.0f, -5.0f));
+	//glm::mat4 t2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -5.0f));
+
 	float angle = 0.0f;
 	do
 	{
@@ -133,7 +136,7 @@ int main(int argc, char** args)
 
 		//Animate stuff
 		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
-		S[1].pos = glm::vec3(rot * glm::vec4(_pl1, 1.0f));
+		S[1].pos = glm::vec3( rot * glm::vec4(_pl1, 1.0f));
 		angle += 0.01f; if(angle >= 6.28f) angle = 0.0f;
 
 		//Load uniform data
