@@ -8,9 +8,10 @@
 //---------------------- DATA TYPES ------------------------
 //----------------------------------------------------------
 struct _material {
-	float kA; 
-	float kD;
-	float kS;
+	float kA; //"global" illumination
+	float kD; //diffuseness
+	float kS; //Specularity
+	float kR; //Reflectance
 	float shininess;
 	vec3 color;
 };
@@ -92,7 +93,7 @@ void main()
 	int max_depth = 3;
 	vec3 ray_origin = vec3(0,0,0);
 	vec3 ray_dir = p;
-	float specularity = 1.0f;
+	float reflectance = 1.0f;
 
 	while(max_depth > 0)
 	{
@@ -118,12 +119,12 @@ void main()
 			point_color(inter, normal, eye2inter, obj_mat, color);
 
 			//add computed color to accumulator
-			sample_color += specularity * color;
+			sample_color += reflectance * color;
 
 			//set parameters for the next level of recursion
 			ray_dir = reflect(ray_dir, normal);
 			ray_origin = inter + normal * 0.001f; //avoid spurious intersections
-			specularity = obj_mat.kS;
+			reflectance = obj_mat.kR;
 
 			//decrease depth counter
 			max_depth -= 1;
@@ -248,14 +249,17 @@ void point_color(in vec3 inter, in vec3 normal, in vec3 eye2inter, in _material 
 			float diff = dot(normalize(inter2light), normal);
 			diff = max(diff, 0.0f);
 
-			inter_color += (L[i].k * diff * obj_mat.kD) * obj_mat.color;
+			float diffuse = diff * obj_mat.kD;
 
 			//specular light
 			vec3 ref_ray = reflect(-normalize(inter2light), normal);
 			float spec = dot(ref_ray, -eye2inter);
 			spec = max(spec, 0.0f);
 
-			inter_color += (L[i].k * spec * falloff * obj_mat.kS) * obj_mat.color;
+			float specular = spec * obj_mat.kS;
+
+			//add all
+			inter_color += (L[i].k * falloff * (diffuse + specular)) * obj_mat.color;
 		}
 	}
 
