@@ -143,11 +143,14 @@ int main(int argc, char** args)
 	transform_plane(P, cam_align);
 
 	//----- Animation stuff ------
+	//this is not correct, as we're rotating in the camera space.
+	//we should rotate it in world space and then send to camera space,
+	//but this would kill performance for no great reason
 	glm::vec3 _pl1 = glm::vec3(S[1].pos.x, S[1].pos.y, S[1].pos.z);
 	glm::mat4 t1 = glm::translate(glm::mat4(1.0f), S[1].pos);
 	glm::mat4 t2 = glm::translate(glm::mat4(1.0f), -S[1].pos);
-
 	float angle = 0.0f;
+
 	do
 	{
 		//Clear screen -> this function also clears stencil and depth buffer
@@ -160,7 +163,10 @@ int main(int argc, char** args)
 		S[1].pos = glm::vec3( rot * glm::vec4(_pl1, 1.0f));
 		angle += 0.007f; if(angle >= 6.28f) angle = 0.0f;
 
-		//Load uniform data
+		//------ Load uniform data ------
+		//There's no better way to do this. If we transform each one in
+		//a function, we'll introduce the overhead of calling one function
+		//(or the compiler itself would just inline all of them).
 		GLuint sphere_base = glGetUniformLocation(raytracer, "S[0].radius");
 		for(int i = 0; i < N_SPHERES; i++)
 		{

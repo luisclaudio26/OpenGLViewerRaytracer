@@ -225,6 +225,9 @@ void cast_ray(in vec3 o, in vec3 d, out int id, out int type, out float t)
 	}
 }
 
+//This is not exactly equal to the lighting equation proposed in
+//project description because we don't have separate colors for
+//ambient, diffuse and specular lighting.
 void point_color(in vec3 inter, in vec3 normal, in vec3 eye2inter, in _material obj_mat, out vec3 inter_color)
 {
 	//Ambient light
