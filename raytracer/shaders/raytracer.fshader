@@ -136,17 +136,17 @@ void main()
 		//cast ray on reflection direction
 		int bounce_id; float bounce_t;
 		vec3 ref_d = reflect(p, normal);
-		cast_ray(inter, ref_d, bounce_id, bounce_t);
+		cast_ray(inter+0.001f*ref_d, ref_d, bounce_id, bounce_t); //we displace it 0.001f units on
+																	//the normal direction to avoid
+																	//spurious autointersections
 
 		vec3 bounce_color = vec3(0,0,0);
-		if(bounce_id == 1)
+		if(bounce_id != -1)
 		{
 			vec3 bounce_inter = bounce_t*ref_d + inter;
 			vec3 bounce_normal = normalize(bounce_inter - S[bounce_id].pos);
 
 			point_color(bounce_inter, bounce_normal, S[bounce_id], bounce_color);
-
-			//bounce_color = vec3(0.0f, 0.0f, 1.0f);
 		}
 
 		sample_color =  inter_color + S[sphere_id].M.kS*bounce_color;

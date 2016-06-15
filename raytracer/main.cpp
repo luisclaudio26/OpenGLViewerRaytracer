@@ -38,7 +38,7 @@ int main(int argc, char** args)
 	//---------------------------
 	PointLight PL1; PL1.k = 1.0f;
 					PL1.falloff = 40.0f;
-					PL1.pos = glm::vec3(0.0f, 0.0f, -9.0f);
+					PL1.pos = glm::vec3(0.0f, 1.0f, -4.0f);
 
 
 	//----------------------------------
@@ -46,19 +46,19 @@ int main(int argc, char** args)
 	//----------------------------------
 	Sphere S[2]; 	
 
-	S[0].radius = 1.0f;
+	S[0].radius = 1.5f;
 	S[0].pos = glm::vec3(2.0f, 0.0f, -7.0f);
 
 	S[1].radius = 1.0f;
-	S[1].pos = glm::vec3(-2.0f, 2.0f, -7.0f);
+	S[1].pos = glm::vec3(-0.8f, 0.0f, -6.0f);
 
 	Material M[2]; 	
 
-	M[0].color[0] = 1.0f;
-	M[0].color[1] = 0.0f;
-	M[0].color[2] = 0.0f;
+	M[0].color[0] = 0.4f;
+	M[0].color[1] = 0.4f;
+	M[0].color[2] = 0.4f;
 	M[0].kA = 0.1f;
-	M[0].kD = 0.3f;
+	M[0].kD = 0.8f;
 	M[0].kS = 1.0f;
 	M[0].shininess = 10.0f;
 
@@ -135,9 +135,11 @@ int main(int argc, char** args)
 		glUseProgram(raytracer);
 
 		//Animate stuff
+		/*
 		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
 		S[1].pos = glm::vec3( rot * glm::vec4(_pl1, 1.0f));
 		angle += 0.01f; if(angle >= 6.28f) angle = 0.0f;
+		*/
 
 		//Load uniform data
 		GLuint sphere_base = glGetUniformLocation(raytracer, "S[0].radius");
