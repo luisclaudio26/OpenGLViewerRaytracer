@@ -175,7 +175,7 @@ void point_color_plane(in vec3 inter, in _plane P, out vec3 inter_color)
 
 	if(occluder_id == -1)
 	{
-		//ambient light
+		//diffuse light
 		float diff = dot(normalize(inter2light), P.normal);
 		diff = max(diff, 0.0f);
 
