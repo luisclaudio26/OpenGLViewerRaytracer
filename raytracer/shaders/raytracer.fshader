@@ -56,9 +56,9 @@ uniform float filmD;
 in vec4 gl_FragCoord;
 
 //TODO: For some reason, passing the screen dimension
-//as float (1024.0f, 600.0f) is causing bizarre
-//things. I 768't deal with it now, so we'll just
-//hardcode the dimension here and fix it after.
+//as float is causing bizarre things. I won't deal 
+//with it now, so we'll just hardcode the dimension 
+//here and fix it after.
 
 //--------------------------------------------------------
 //--------------------- OUTPUT DATA ----------------------
@@ -68,6 +68,68 @@ out vec3 sample_color;
 //--------------------------------------------------
 //---------------------- CODE ----------------------
 //--------------------------------------------------
+void intersect_with_sphere(in vec3 o, in vec3 p, in _sphere S, out float t);
+void intersect_with_plane(in vec3 o, in vec3 d, in _plane P, out float t);
+
+void cast_ray(in vec3 o, in vec3 d, out int id, out int type, out float t);
+
+void point_color_sphere(in vec3 intersection, in vec3 normal, in vec3 eye2inter, in _sphere S, out vec3 color);
+void point_color_plane(in vec3 inter, in vec3 eye2inter, in _plane P, out vec3 inter_color);
+void point_color(in vec3 inter, in vec3 normal, in vec3 eye2inter, in int obj_id, in int obj_type, out vec3 inter_color);
+
+void compute_normal(in vec3 intersection, in int obj_id, in int obj_type, out vec3 normal);
+
+void main()
+{
+	sample_color = vec3(0.0f, 0.0f, 0.0f);
+
+	//Compute position of the sample in camera space
+	//we want samples to range from -W/2 to W/2 and -H/2 to H/2
+	vec3 p;
+	p.x = ( (gl_FragCoord.x/800.0f) - 0.5f) * filmW;
+	p.y = ( (gl_FragCoord.y/600.0f) - 0.5f) * filmH;
+	p.z = -filmD;
+
+	//this is computed from first to last intersection
+	int max_depth = 3;
+	vec3 ray_origin = vec3(0,0,0);
+	vec3 ray_dir = p;
+
+	while(max_depth > 0)
+	{
+		//Compute closest intersection
+		int obj_id; int obj_type; float t;
+		cast_ray(ray_origin, ray_dir, obj_id, obj_type, t);
+
+		//if we intersected nothing, stop recursing;
+		//otherwise, compute pixel color and set next
+		//recursion level
+		if(obj_id == -1)
+			max_depth = 0;
+		else
+		{
+			//needed data
+			vec3 inter = ray_origin + t*ray_dir;
+			vec3 normal; compute_normal(inter, obj_id, obj_type, normal);
+			vec3 eye2inter = inter - ray_origin;
+
+			//compute final color
+			vec3 color;
+			point_color(inter, normal, eye2inter, obj_id, obj_type, color);
+
+			//add computed color to accumulator
+			sample_color += color;
+
+			//set parameters to next level of recursion
+			ray_dir = reflect(ray_dir, normal);
+			ray_origin = inter + normal * 0.001f; //avoid spurious intersections
+
+			//decrease depth counter
+			max_depth -= 1;
+		}
+	}
+}
+
 void intersect_with_sphere(in vec3 o, in vec3 p, in _sphere S, out float t)
 {
 	//REMEMBER! One must really define the OUT variables here,
@@ -231,54 +293,3 @@ void point_color(in vec3 inter, in vec3 normal, in vec3 eye2inter, in int obj_id
 		point_color_plane(inter, eye2inter, P[obj_id], inter_color);
 }
 
-void main()
-{
-	sample_color = vec3(0.0f, 0.0f, 0.0f);
-
-	//Compute position of the sample in camera space
-	//we want samples to range from -W/2 to W/2 and -H/2 to H/2
-	vec3 p;
-	p.x = ( (gl_FragCoord.x/800.0f) - 0.5f) * filmW;
-	p.y = ( (gl_FragCoord.y/600.0f) - 0.5f) * filmH;
-	p.z = -filmD;
-
-	//Compute first intersection
-	int obj_id; int obj_type; float t;
-	cast_ray(vec3(0,0,0), p, obj_id, obj_type, t);
-
-	//If we intersected something
-	if(obj_id != -1)
-	{
-		vec3 inter = t*p;
-		vec3 normal; compute_normal(inter, obj_id, obj_type, normal);
-		vec3 eye2inter = inter - p;
-
-		vec3 inter_color;
-		point_color(inter, normal, eye2inter, obj_id, obj_type, inter_color);
-
-		//cast ray on reflection direction
-		int bounce_id; int bounce_type; float bounce_t;
-		vec3 ref_d = reflect(p, normal);
-
-		//We displace it 0.001f units on the normal direction to avoid
-		//spurious autointersections
-		cast_ray(inter+0.001f*ref_d, ref_d, bounce_id, bounce_type, bounce_t);
-
-		vec3 bounce_color = vec3(0,0,0);
-		if(bounce_id != -1)
-		{
-			vec3 bounce_inter = bounce_t*ref_d + inter;
-			vec3 bounce_normal; compute_normal(bounce_inter, bounce_id, bounce_type, bounce_normal);
-			vec3 inter2binter = bounce_inter - inter;
-
-			point_color(bounce_inter, bounce_normal, inter2binter, bounce_id, bounce_type, bounce_color);
-		}
-
-		sample_color = inter_color;
-
-		if(obj_type == SPHERE)
-			sample_color += S[obj_id].M.kS * bounce_color;
-		else if(obj_type == PLANE)
-			sample_color += P[obj_id].M.kS * bounce_color;
-	}
-}

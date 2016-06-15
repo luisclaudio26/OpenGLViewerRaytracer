@@ -161,7 +161,7 @@ int main(int argc, char** args)
 		//Animate stuff
 		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
 		S[1].pos = glm::vec3( rot * glm::vec4(_pl1, 1.0f));
-		angle += 0.02f; if(angle >= 6.28f) angle = 0.0f;
+		angle += 0.007f; if(angle >= 6.28f) angle = 0.0f;
 
 		//Load uniform data
 		GLuint sphere_base = glGetUniformLocation(raytracer, "S[0].radius");
