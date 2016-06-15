@@ -37,16 +37,19 @@ int main(int argc, char** args)
 	//---------------------------
 	//-------- Lighting ---------
 	//---------------------------
-	PointLight PL[1]; 
-	PL[0].k = 1.0f;
+	PointLight PL[2]; const int N_LIGHTS = 2;
+	PL[0].k = 0.4f;
 	PL[0].falloff = 20.0f;
 	PL[0].pos = glm::vec3(-3.0f, 1.5f, -7.0f);
-
+ 
+	PL[1].k = 0.6f;
+	PL[1].falloff = 20.0f;
+	PL[1].pos = glm::vec3(0.0f, 3.0f, -10.0f);
 
 	//----------------------------------
 	//-------- Geometry setting --------
 	//----------------------------------
-	Sphere S[2]; 	
+	Sphere S[2]; const int N_SPHERES = 2;
 
 	S[0].radius = 1.5f;
 	S[0].pos = glm::vec3(2.0f, 0.0f, -7.0f);
@@ -54,7 +57,7 @@ int main(int argc, char** args)
 	S[1].radius = 1.0f;
 	S[1].pos = glm::vec3(-1.5f, -0.5f, -9.0f);
 
-	Plane P;
+	Plane P; const int N_PLANES = 1;
 	P.normal = glm::vec3(0.0f, 1.0f, 0.0f);
 	P.d = 1.5f;
 
@@ -81,7 +84,7 @@ int main(int argc, char** args)
 	M[2].color[2] = 0.4f;
 	M[2].kA = 0.3f;
 	M[2].kD = 0.3f;
-	M[2].kS = 0.4f;
+	M[2].kS = 0.0f;
 	M[2].shininess = 10.0f;
 
 	//------------------------------
@@ -133,6 +136,7 @@ int main(int argc, char** args)
 	//Send objects to camera space (camera is origin,
 	//with up = y, look_at = -z and x = up x look_at)
 	PL[0].pos = glm::vec3( cam_align*glm::vec4(PL[0].pos, 1.0f) );
+	PL[1].pos = glm::vec3( cam_align*glm::vec4(PL[1].pos, 1.0f) );
 	S[0].pos = glm::vec3( cam_align*glm::vec4(S[0].pos, 1.0f) );
 	S[1].pos = glm::vec3( cam_align*glm::vec4(S[1].pos, 1.0f) );
 	
@@ -141,9 +145,10 @@ int main(int argc, char** args)
 	P.normal = glm::vec3( _p[0], _p[1], _p[2] );
 	P.d = _p[3];
 
-	//glm::vec3 _pl1 = glm::vec3(S[1].pos.x, S[1].pos.y, S[1].pos.z);
-	//glm::mat4 t1 = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, -7.0f));
-	//glm::mat4 t2 = glm::translate(glm::mat4(1.0f), -glm::vec3(2.0f, 0.0f, -7.0f));
+	/*
+	glm::vec3 _pl1 = glm::vec3(PL[1].pos.x, PL[1].pos.y, PL[1].pos.z);
+	glm::mat4 t1 = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 1.5f, -7.0f));
+	glm::mat4 t2 = glm::translate(glm::mat4(1.0f), -glm::vec3(-3.0f, 1.5f, -7.0f)); */
 
 	float angle = 0.0f;
 	do
@@ -154,13 +159,14 @@ int main(int argc, char** args)
 		glUseProgram(raytracer);
 
 		//Animate stuff
-		//glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(1.0f, 0.0f, 0.0f));
-		//S[1].pos = glm::vec3( (t1*rot*t2) * glm::vec4(_pl1, 1.0f));
-		//angle += 0.02f; if(angle >= 6.28f) angle = 0.0f;
+		/*
+		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
+		PL[1].pos = glm::vec3( (t1*rot*t2) * glm::vec4(_pl1, 1.0f));
+		angle += 0.02f; if(angle >= 6.28f) angle = 0.0f; */
 
 		//Load uniform data
 		GLuint sphere_base = glGetUniformLocation(raytracer, "S[0].radius");
-		for(int i = 0; i < 2; i++)
+		for(int i = 0; i < N_SPHERES; i++)
 		{
 			GLuint sphere_id = sphere_base + i*6; //6 parameters per struct Sphere
 
@@ -173,7 +179,7 @@ int main(int argc, char** args)
 		}
 
 		GLuint plane_base = glGetUniformLocation(raytracer, "P[0].d");
-		for(int i = 0; i < 1; i++)
+		for(int i = 0; i < N_PLANES; i++)
 		{
 			GLuint plane_id = plane_base + i*6;
 
@@ -186,7 +192,7 @@ int main(int argc, char** args)
 		}
 
 		GLuint light_base = glGetUniformLocation(raytracer, "L[0].k");
-		for(int i = 0; i < 1; i++)
+		for(int i = 0; i < N_LIGHTS; i++)
 		{
 			GLuint light_id = light_base + i*3;
 
@@ -240,7 +246,7 @@ GLFWwindow* setup()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	//Create window and set it as the context
-	GLFWwindow *window = glfwCreateWindow(800, 600, "Project 2", NULL, NULL);
+	GLFWwindow *window = glfwCreateWindow(1024, 768, "Project 2", NULL, NULL);
 	glfwMakeContextCurrent(window);
 
 	//Initialize GLEW. Don't what the fuck is this.

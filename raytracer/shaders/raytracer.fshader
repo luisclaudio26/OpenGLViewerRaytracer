@@ -43,8 +43,8 @@ uniform _plane P[1];
 #define N_PLANES
 
 //Light info (we're considering ONE light source)
-uniform _pointlight L[1];
-#define N_LIGHTS 1
+uniform _pointlight L[2];
+#define N_LIGHTS 2
 
 //Camera info
 uniform float filmW;
@@ -55,8 +55,8 @@ uniform float filmD;
 in vec4 gl_FragCoord;
 
 //TODO: For some reason, passing the screen dimension
-//as float (800.0f, 600.0f) is causing bizarre
-//things. I won't deal with it now, so we'll just
+//as float (1024.0f, 600.0f) is causing bizarre
+//things. I 768't deal with it now, so we'll just
 //hardcode the dimension here and fix it after.
 
 //--------------------------------------------------------
@@ -195,7 +195,6 @@ void point_color_plane(in vec3 inter, in _plane P, out vec3 inter_color)
 			}
 		}
 	}
-
 }
 
 void compute_normal(in vec3 intersection, in int obj_id, in int obj_type, out vec3 normal)
@@ -223,8 +222,8 @@ void main()
 	//Compute position of the sample in camera space
 	//we want samples to range from -W/2 to W/2 and -H/2 to H/2
 	vec3 p;
-	p.x = ( (gl_FragCoord.x/800.0f) - 0.5f) * filmW;
-	p.y = ( (gl_FragCoord.y/600.0f) - 0.5f) * filmH;
+	p.x = ( (gl_FragCoord.x/1024.0f) - 0.5f) * filmW;
+	p.y = ( (gl_FragCoord.y/768.0f) - 0.5f) * filmH;
 	p.z = -filmD;
 
 	//Compute first intersection
