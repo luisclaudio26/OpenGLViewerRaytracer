@@ -123,8 +123,8 @@ int main(int argc, char** args)
 	S[1].pos = glm::vec3( cam_align*glm::vec4(S[1].pos, 1.0f) );
 
 	glm::vec3 _pl1 = glm::vec3(S[1].pos.x, S[1].pos.y, S[1].pos.z);
-	//glm::mat4 t1 = glm::translate(glm::mat4(1.0f), -glm::vec3(0.0f, 0.0f, -5.0f));
-	//glm::mat4 t2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -5.0f));
+	glm::mat4 t1 = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, -7.0f));
+	glm::mat4 t2 = glm::translate(glm::mat4(1.0f), -glm::vec3(2.0f, 0.0f, -7.0f));
 
 	float angle = 0.0f;
 	do
@@ -135,11 +135,9 @@ int main(int argc, char** args)
 		glUseProgram(raytracer);
 
 		//Animate stuff
-		/*
-		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
-		S[1].pos = glm::vec3( rot * glm::vec4(_pl1, 1.0f));
-		angle += 0.01f; if(angle >= 6.28f) angle = 0.0f;
-		*/
+		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(1.0f, 0.0f, 0.0f));
+		S[1].pos = glm::vec3( (t1*rot*t2) * glm::vec4(_pl1, 1.0f));
+		angle += 0.08f; if(angle >= 6.28f) angle = 0.0f;
 
 		//Load uniform data
 		GLuint sphere_base = glGetUniformLocation(raytracer, "S[0].radius");
