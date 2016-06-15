@@ -78,21 +78,6 @@ void intersect_with_sphere(in vec3 o, in vec3 p, in _sphere S, out float t)
 	}
 }
 
-void point_color(in vec3 intersection, in vec3 normal, in _sphere S, out vec3 color)
-{
-	//-------- Phong model --------
-	//ambient light
-	color = S.M.kA * S.M.color;
-
-	//diffuse light
-	vec3 inter2light = L1.pos - intersection;
-	float diff = dot(normalize(inter2light), normal);
-
-	diff = max(diff, 0.0f);
-
-	color = color + (L1.k * diff * S.M.kD) * S.M.color;
-}
-
 void cast_ray(in vec3 o, in vec3 d, out int id, out float t)
 {
 	id = -1; t = 100000.0f; //Infinity
@@ -106,6 +91,29 @@ void cast_ray(in vec3 o, in vec3 d, out int id, out float t)
 			t = t_aux;
 			id = i;
 		}
+	}
+}
+
+void point_color(in vec3 intersection, in vec3 normal, in _sphere S, out vec3 color)
+{
+	//-------- Phong model --------
+	//ambient light
+	color = S.M.kA * S.M.color;
+	
+	//cast shadow ray
+	vec3 inter2light = L1.pos - intersection;
+
+	int occluder_id; float t;
+	cast_ray(intersection+0.0001f*inter2light, inter2light, occluder_id, t);
+
+	//if no object is occluding the point
+	if(occluder_id == -1)
+	{
+		//diffuse light
+		float diff = dot(normalize(inter2light), normal);
+		diff = max(diff, 0.0f);
+
+		color = color + (L1.k * diff * S.M.kD) * S.M.color;
 	}
 }
 

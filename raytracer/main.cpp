@@ -38,7 +38,7 @@ int main(int argc, char** args)
 	//---------------------------
 	PointLight PL1; PL1.k = 1.0f;
 					PL1.falloff = 40.0f;
-					PL1.pos = glm::vec3(0.0f, 1.0f, -4.0f);
+					PL1.pos = glm::vec3(-3.0f, 0.0f, -7.0f);
 
 
 	//----------------------------------
