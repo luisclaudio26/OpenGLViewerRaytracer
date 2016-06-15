@@ -25,8 +25,8 @@ int main(int argc, char** args)
 	//-------- View-Projection settings --------
 	//------------------------------------------
 	Camera cam;
-	cam.pos = glm::vec3(0.0f, 2.0f, 0.0f);
-	cam.look_at = glm::vec3(-1.5f, 0.0f, -7.0f) - cam.pos;
+	cam.pos = glm::vec3(-20.0f, 5.0f, 0.0f);
+	cam.look_at = glm::vec3(0.0, 0.0, 0.0) - cam.pos;
 	cam.up = glm::vec3(0.0f, 1.0f, 0.0f);
 	cam.d = 1.0f;
 	cam.w = 1.3f;
@@ -38,28 +38,28 @@ int main(int argc, char** args)
 	//-------- Lighting ---------
 	//---------------------------
 	PointLight PL[2]; const int N_LIGHTS = 2;
-	PL[0].k = 0.0f;
-	PL[0].falloff = 20.0f;
-	PL[0].pos = glm::vec3(-3.0f, 1.5f, -7.0f);
+	PL[0].k = 0.5f;
+	PL[0].falloff = 0.5f;
+	PL[0].pos = glm::vec3(-3.0f, 8.0f, 0.0f);
  
-	PL[1].k = 0.3f;
-	PL[1].falloff = 20.0f;
-	PL[1].pos = glm::vec3(0.0f, 4.0f, -7.0f);
+	PL[1].k = 0.5f;
+	PL[1].falloff = 0.5f;
+	PL[1].pos = glm::vec3(10.0f, 8.0f, 0.0f);
 
 	//----------------------------------
 	//-------- Geometry setting --------
 	//----------------------------------
 	Sphere S[2]; const int N_SPHERES = 2;
 
-	S[0].radius = 1.5f;
-	S[0].pos = glm::vec3(2.0f, 0.0f, -7.0f);
+	S[0].radius = 3.0f;
+	S[0].pos = glm::vec3(0.0f, -2.0f, 5.0f);
 
-	S[1].radius = 1.0f;
-	S[1].pos = glm::vec3(-1.5f, -0.5f, -9.0f);
+	S[1].radius = 5.0f;
+	S[1].pos = glm::vec3(0.0f, 0.0f, -5.0f);
 
 	Plane P; const int N_PLANES = 1;
 	P.normal = glm::vec3(0.0f, 1.0f, 0.0f);
-	P.d = 1.5f;
+	P.d = 5.0f;
 
 	Material M[3]; 	
 
@@ -69,23 +69,23 @@ int main(int argc, char** args)
 	M[0].kA = 0.1f;
 	M[0].kD = 0.8f;
 	M[0].kS = 0.3f;
-	M[0].shininess = 0.4f;
+	M[0].shininess = 1.0f;
 
 	M[1].color[0] = 0.0f;
 	M[1].color[1] = 1.0f;
 	M[1].color[2] = 0.0f;
 	M[1].kA = 0.1f;
-	M[1].kD = 0.8f;
-	M[1].kS = 1.0f;
-	M[1].shininess = 0.3f;
+	M[1].kD = 0.6f;
+	M[1].kS = 0.9f;
+	M[1].shininess = 1.0f;
 
 	M[2].color[0] = 0.4f;
 	M[2].color[1] = 0.4f;
 	M[2].color[2] = 0.4f;
 	M[2].kA = 0.3f;
-	M[2].kD = 0.3f;
+	M[2].kD = 1.0f;
 	M[2].kS = 0.2f;
-	M[2].shininess = 20.0f;
+	M[2].shininess = 2.0f;
 
 	//------------------------------
 	//------- Shader setting -------
@@ -146,9 +146,9 @@ int main(int argc, char** args)
 	P.d = _p[3];
 
 
-	glm::vec3 _pl1 = glm::vec3(PL[1].pos.x, PL[1].pos.y, PL[1].pos.z);
-	glm::mat4 t1 = glm::translate(glm::mat4(1.0f), glm::vec3(-3.0f, 1.5f, -7.0f));
-	glm::mat4 t2 = glm::translate(glm::mat4(1.0f), -glm::vec3(-3.0f, 1.5f, -7.0f));
+	glm::vec3 _pl1 = glm::vec3(S[1].pos.x, S[1].pos.y, S[1].pos.z);
+	glm::mat4 t1 = glm::translate(glm::mat4(1.0f), S[1].pos);
+	glm::mat4 t2 = glm::translate(glm::mat4(1.0f), -S[1].pos);
 
 	float angle = 0.0f;
 	do
@@ -160,7 +160,7 @@ int main(int argc, char** args)
 
 		//Animate stuff
 		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
-		PL[1].pos = glm::vec3( (t1*rot*t2) * glm::vec4(_pl1, 1.0f));
+		S[1].pos = glm::vec3( rot * glm::vec4(_pl1, 1.0f));
 		angle += 0.02f; if(angle >= 6.28f) angle = 0.0f;
 
 		//Load uniform data
@@ -247,7 +247,7 @@ GLFWwindow* setup()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	//Create window and set it as the context
-	GLFWwindow *window = glfwCreateWindow(1024, 768, "Project 2", NULL, NULL);
+	GLFWwindow *window = glfwCreateWindow(800,600, "Project 2", NULL, NULL);
 	glfwMakeContextCurrent(window);
 
 	//Initialize GLEW. Don't what the fuck is this.

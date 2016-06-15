@@ -160,6 +160,9 @@ void point_color_sphere(in vec3 intersection, in vec3 normal, in vec3 eye2inter,
 		//if no object is occluding the point
 		if(occluder_id == -1)
 		{
+			//light falloff
+			float fo = 1.0f / (L[i].falloff * dot(inter2light, inter2light));
+
 			//diffuse light
 			float diff = dot(normalize(inter2light), normal);
 			diff = max(diff, 0.0f);
@@ -167,11 +170,11 @@ void point_color_sphere(in vec3 intersection, in vec3 normal, in vec3 eye2inter,
 			color += (L[i].k * diff * S.M.kD) * S.M.color;
 
 			//specular light
-			vec3 ref_ray = reflect(-normalize(inter2light), normal);
-			float spec = dot(ref_ray, -eye2inter);
+			vec3 ref_ray = reflect(-inter2light, normal);
+			float spec = dot(normalize(ref_ray), -eye2inter);
 			spec = max(spec, 0.0f);
 
-			color += (L[i].k * pow(spec, S.M.shininess) * S.M.kS) * S.M.color;
+			color += (L[i].k * fo * pow(spec, S.M.shininess) * S.M.kS) * S.M.color;
 		}
 	}
 }
@@ -192,13 +195,13 @@ void point_color_plane(in vec3 inter, in vec3 eye2inter, in _plane P, out vec3 i
 
 		if(occluder_id == -1)
 		{
-			float falloff = L[i].falloff / dot(inter2light, inter2light);
+			float falloff = 1.0f / (L[i].falloff * dot(inter2light, inter2light));
 
 			//diffuse light
 			float diff = dot(normalize(inter2light), P.normal);
 			diff = max(diff, 0.0f);
 
-			inter_color += (L[i].k * diff *falloff * P.M.kD) * P.M.color;
+			inter_color += (L[i].k * diff * P.M.kD) * P.M.color;
 
 			//specular light
 			vec3 ref_ray = reflect(-normalize(inter2light), P.normal);
@@ -235,8 +238,8 @@ void main()
 	//Compute position of the sample in camera space
 	//we want samples to range from -W/2 to W/2 and -H/2 to H/2
 	vec3 p;
-	p.x = ( (gl_FragCoord.x/1024.0f) - 0.5f) * filmW;
-	p.y = ( (gl_FragCoord.y/768.0f) - 0.5f) * filmH;
+	p.x = ( (gl_FragCoord.x/800.0f) - 0.5f) * filmW;
+	p.y = ( (gl_FragCoord.y/600.0f) - 0.5f) * filmH;
 	p.z = -filmD;
 
 	//Compute first intersection
