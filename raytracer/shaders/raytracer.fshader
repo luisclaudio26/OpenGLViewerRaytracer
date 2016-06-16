@@ -34,7 +34,7 @@ struct _plane {
 
 struct _cylinder {
 	vec3 pos;
-	float a, b;
+	float a;
 	_material M;
 };
 

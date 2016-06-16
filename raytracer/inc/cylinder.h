@@ -6,7 +6,7 @@
 
 typedef struct {
 	glm::vec3 pos;
-	float a, b;
+	float a;
 } Cylinder;
 
 //this is not entirely correct; if T was not orthogonal,

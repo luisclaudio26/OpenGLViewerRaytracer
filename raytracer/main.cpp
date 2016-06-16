@@ -67,7 +67,7 @@ int main(int argc, char** args)
 
 	Cylinder C[1]; const int N_CYLINDER = 1;
 	C[0].pos = glm::vec3(-9.0f, 0.0f, 15.0f);
-	C[0].a = C[0].b = 3.0f;
+	C[0].a = 3.0f;
 
 	Material M[5]; 	
 
@@ -78,7 +78,7 @@ int main(int argc, char** args)
 	M[0].kA = 0.1f;
 	M[0].kD = 0.8f;
 	M[0].kS = 0.02f;
-	M[0].kR = 1.0f;
+	M[0].kR = 0.6f;
 	M[0].shininess = 1.5f;
 
 	M[1].color[0] = 0.0f;
@@ -87,15 +87,15 @@ int main(int argc, char** args)
 	M[1].kA = 0.1f;
 	M[1].kD = 0.0f;
 	M[1].kS = 0.01f;
-	M[1].kR = 1.0f;
+	M[1].kR = 0.2f;
 	M[1].shininess = 1.0f;
 
 	//planes
-	M[2].color[0] = 1.0f;
-	M[2].color[1] = 1.0f;
-	M[2].color[2] = 1.0f;
+	M[2].color[0] = 0.7f;
+	M[2].color[1] = 0.7f;
+	M[2].color[2] = 0.7f;
 	M[2].kA = 0.3f;
-	M[2].kD = 0.6f;
+	M[2].kD = 0.5f;
 	M[2].kS = 0.0f;
 	M[2].kR = 0.0f;
 	M[2].shininess = 1.0f;
@@ -111,12 +111,12 @@ int main(int argc, char** args)
 
 	//cylinder
 	M[4].color[0] = 0.4f;
-	M[4].color[1] = 0.8f;
-	M[4].color[2] = 0.7f;
+	M[4].color[1] = 0.6f;
+	M[4].color[2] = 0.5f;
 	M[4].kA = 0.4f;
 	M[4].kD = 0.6f;
 	M[4].kS = 0.0f;
-	M[4].kR = 0.0f;
+	M[4].kR = 0.3f;
 	M[4].shininess = 1.0f;
 
 	//------------------------------
@@ -240,19 +240,18 @@ int main(int argc, char** args)
 		GLuint cylinder_base = glGetUniformLocation(raytracer, "C[0].pos");
 		for(int i = 0; i < N_CYLINDER; i++)
 		{
-			GLuint cylinder_id = cylinder_base + i*9;
+			GLuint cylinder_id = cylinder_base + i*8;
 
 			glUniform3f(cylinder_id, C[i].pos[0], C[i].pos[1], C[i].pos[2]);
 			glUniform1f(cylinder_id+1, C[i].a);
-			glUniform1f(cylinder_id+2, C[i].b);
 
 			//set material
-			glUniform1f(cylinder_id+3, M[4].kA);
-			glUniform1f(cylinder_id+4, M[4].kD);
-			glUniform1f(cylinder_id+5, M[4].kS);
-			glUniform1f(cylinder_id+6, M[4].kR);
-			glUniform1f(cylinder_id+7, M[4].shininess);
-			glUniform3f(cylinder_id+8, M[4].color[0], M[4].color[1], M[4].color[2]);
+			glUniform1f(cylinder_id+2, M[4].kA);
+			glUniform1f(cylinder_id+3, M[4].kD);
+			glUniform1f(cylinder_id+4, M[4].kS);
+			glUniform1f(cylinder_id+5, M[4].kR);
+			glUniform1f(cylinder_id+6, M[4].shininess);
+			glUniform3f(cylinder_id+7, M[4].color[0], M[4].color[1], M[4].color[2]);
 		}
 
 		GLuint film_w = glGetUniformLocation(raytracer, "filmW");
