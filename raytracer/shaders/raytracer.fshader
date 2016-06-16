@@ -8,6 +8,15 @@
 #define PLANE 2
 #define CYLINDER 3
 
+#define SAMPLES_PER_PIXEL 10
+
+//This is somehow a classical snippet for random number generation
+//in GLSL
+float rand(vec2 co)
+{
+   return fract(sin(dot(co.xy,vec2(12.9898,78.233))) * 43758.5453);
+}
+
 //----------------------------------------------------------
 //---------------------- DATA TYPES ------------------------
 //----------------------------------------------------------
@@ -92,54 +101,65 @@ void main()
 {
 	sample_color = vec3(0.0f, 0.0f, 0.0f);
 
-	//Compute position of the sample in camera space
-	//we want samples to range from -W/2 to W/2 and -H/2 to H/2
-	vec3 p;
-	p.x = ( (gl_FragCoord.x/800.0f) - 0.5f) * filmW;
-	p.y = ( (gl_FragCoord.y/600.0f) - 0.5f) * filmH;
-	p.z = -filmD;
-
-	//this is computed from first to last intersection
-	int max_depth = 3;
-	vec3 ray_origin = vec3(0,0,0);
-	vec3 ray_dir = p;
-	float reflectance = 1.0f;
-
-	while(max_depth > 0)
+	for(int i = 0; i < SAMPLES_PER_PIXEL; i++)
 	{
-		//Compute closest intersection
-		int obj_id; int obj_type; float t;
-		cast_ray(ray_origin, ray_dir, obj_id, obj_type, t);
+		//generate a random displacement
+		vec2 shift;
+		shift.x = rand( vec2(0.2f, i+1) );
+		shift.y = rand( vec2(0.2f, i) );
 
-		//if we intersected nothing, stop recursing;
-		//otherwise, compute pixel color and set next
-		//recursion level
-		if(obj_id == -1)
-			max_depth = 0;
-		else
+		//Compute position of the sample in camera space
+		//we want samples to range from -W/2 to W/2 and -H/2 to H/2
+		vec3 p;
+		p.x = ( ((gl_FragCoord.x + shift.x)/800.0f) - 0.5f ) * filmW;
+		p.y = ( ((gl_FragCoord.y + shift.y)/600.0f) - 0.5f ) * filmH;
+		p.z = -filmD;
+
+		//this is computed from first to last intersection
+		int max_depth = 3;
+		vec3 ray_origin = vec3(0,0,0);
+		vec3 ray_dir = p;
+		float reflectance = 1.0f;
+
+		while(max_depth > 0)
 		{
-			//needed data
-			_material obj_mat; get_material(obj_id, obj_type, obj_mat);
-			vec3 inter = ray_origin + t*ray_dir;
-			vec3 normal; compute_normal(inter, obj_id, obj_type, normal);
-			vec3 eye2inter = inter - ray_origin;
+			//Compute closest intersection
+			int obj_id; int obj_type; float t;
+			cast_ray(ray_origin, ray_dir, obj_id, obj_type, t);
 
-			//compute final color
-			vec3 color;
-			point_color(inter, normal, eye2inter, obj_mat, color);
+			//if we intersected nothing, stop recursing;
+			//otherwise, compute pixel color and set next
+			//recursion level
+			if(obj_id == -1)
+				max_depth = 0;
+			else
+			{
+				//needed data
+				_material obj_mat; get_material(obj_id, obj_type, obj_mat);
+				vec3 inter = ray_origin + t*ray_dir;
+				vec3 normal; compute_normal(inter, obj_id, obj_type, normal);
+				vec3 eye2inter = inter - ray_origin;
 
-			//add computed color to accumulator
-			sample_color += reflectance * color;
+				//compute final color
+				vec3 color;
+				point_color(inter, normal, eye2inter, obj_mat, color);
 
-			//set parameters for the next level of recursion
-			ray_dir = reflect(ray_dir, normal);
-			ray_origin = inter + normal * 0.001f; //avoid spurious intersections
-			reflectance = obj_mat.kR;
+				//add computed color to accumulator
+				sample_color += reflectance * color;
 
-			//decrease depth counter
-			max_depth -= 1;
+				//set parameters for the next level of recursion
+				ray_dir = reflect(ray_dir, normal);
+				ray_origin = inter + normal * 0.001f; //avoid spurious intersections
+				reflectance = obj_mat.kR;
+
+				//decrease depth counter
+				max_depth -= 1;
+			}
 		}
+
 	}
+
+	sample_color *= 1.0f / SAMPLES_PER_PIXEL;
 }
 
 void get_material(in int obj_id, in int obj_type, out _material obj_mat)
