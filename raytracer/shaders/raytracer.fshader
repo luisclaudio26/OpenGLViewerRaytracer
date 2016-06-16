@@ -6,7 +6,7 @@
 
 #define SPHERE 1
 #define PLANE 2
-#define CUBE 3
+#define CYLINDER 3
 
 //----------------------------------------------------------
 //---------------------- DATA TYPES ------------------------
@@ -32,9 +32,9 @@ struct _plane {
 	_material M;
 };
 
-struct _cube {
+struct _cylinder {
 	vec3 pos;
-	float l;
+	float a, b;
 	_material M;
 };
 
@@ -51,11 +51,11 @@ struct _pointlight {
 uniform _sphere S[2];
 #define N_SPHERES 2
 
-uniform _plane P[1];
-#define N_PLANES 1
+uniform _plane P[2];
+#define N_PLANES 2
 
-uniform _cube C[1];
-#define N_CUBES 1
+uniform _cylinder C[1];
+#define N_CYLINDERS 1
 
 //Light info (we're considering ONE light source)
 uniform _pointlight L[2];
@@ -148,7 +148,7 @@ void get_material(in int obj_id, in int obj_type, out _material obj_mat)
 		obj_mat = S[obj_id].M;
 	else if(obj_type == PLANE)
 		obj_mat = P[obj_id].M;
-	else if(obj_type == CUBE)
+	else if(obj_type == CYLINDER)
 		obj_mat = C[obj_id].M;
 }
 
@@ -160,13 +160,14 @@ void compute_normal(in vec3 intersection, in int obj_id, in int obj_type, out ve
 		normal = normalize(intersection - S[obj_id].pos);
 	else if(obj_type == PLANE)
 		normal = normalize(P[obj_id].normal);
-	else if(obj_type == CUBE)
+	else if(obj_type == CYLINDER)
 	{
-		_cube c = C[obj_id];
+		_cylinder c = C[obj_id];
 
-		normal.x = step(c.l, intersection.x - c.pos.x) * c.l;
-		normal.y = step(c.l, intersection.y - c.pos.y) * c.l;
-		normal.z = step(c.l, intersection.z - c.pos.z) * c.l;
+		normal.x = 2.0f*(intersection.x - c.pos.x);
+		normal.z = 2.0f*(intersection.z - c.pos.z);
+		normal.y = 0.0f;
+		normal = normalize(normal);
 	}
 }
 
@@ -213,18 +214,40 @@ void intersect_with_plane(in vec3 o, in vec3 d, in _plane P, out float t)
 	}
 }
 
-void intersect_with_cube(in vec3 o, in vec3 d, in _cube cube, out float t)
+void swap(inout float a, inout float b)
+{
+	float aux = a;
+	a = b;
+	b = aux;
+}
+
+void intersect_with_cylinder(in vec3 o, in vec3 d, in _cylinder cy, out float t)
 {
 	t = INF2;
 
-	//infinite norms
-	vec3 oc = o - cube.pos;
-	float norm_oc = max(abs(oc.x), max(abs(oc.y), abs(oc.z)));
-	float norm_d = max(abs(d.x), max(abs(d.y), abs(d.z)));
+	vec2 o_ = vec2(o.x, o.z);
+	vec2 d_ = vec2(d.x, d.z);
+	vec2 c_ = vec2(cy.pos.x, cy.pos.z);
 
-	//compute intersections
-	t = (cube.l - norm_oc) / norm_d;
-	if(t < 0) t = -t;
+	//compute intersection with cylinder
+	float a = dot(d_,d_);
+	float b = 2*( dot(o_,d_) - dot(c_,d_) );
+	float c = dot(o_-c_, o_-c_) - cy.a*cy.a;
+
+	float D = b*b - 4*a*c;
+
+	if(D > 0.0f)
+	{
+		//Compute closest intersection
+		float t_ = -b - sqrt(D);
+
+		//first root is negative, try the second one
+		if(t_ < 0) t_ = -b + sqrt(D);
+
+		//if we found a positive root, output it
+		//otherwise, we'll output infinity
+		if(t_ >= 0) t = t_/(2*a);
+	}
 }
 
 void cast_ray(in vec3 o, in vec3 d, out int id, out int type, out float t)
@@ -259,15 +282,15 @@ void cast_ray(in vec3 o, in vec3 d, out int id, out int type, out float t)
 	}
 
 	//test intersection with cubes
-	for(int i = 0; i < N_CUBES; i++)
+	for(int i = 0; i < N_CYLINDERS; i++)
 	{
-		intersect_with_cube(o, d, C[i], t_aux);
+		intersect_with_cylinder(o, d, C[i], t_aux);
 
 		if(t_aux < t)
 		{
 			t = t_aux;
 			id = i;
-			type = CUBE;
+			type = CYLINDER;
 		}
 	}
 }
@@ -286,11 +309,12 @@ void point_color(in vec3 inter, in vec3 normal, in vec3 eye2inter, in _material 
 	
 		//cast shadow ray	
 		int occluder_id; int dummy; float t;
-		cast_ray(inter + 0.0001f * inter2light, inter2light, occluder_id, dummy, t);
+		cast_ray(inter + 0.0001f * normal, inter2light, occluder_id, dummy, t);
 
 		//diffuse and specular only if point of intersection is
-		//not occluded by another object
-		if(occluder_id == -1)
+		//not occluded by another object OR occlusion occurs AFTER
+		//the light source
+		if(occluder_id == -1 || t > 1.0f)
 		{
 			//light attenuation, proportional to 1/(a.d²)
 			float falloff = 1.0f / (L[i].falloff * dot(inter2light, inter2light));

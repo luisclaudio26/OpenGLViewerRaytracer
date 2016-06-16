@@ -14,7 +14,7 @@ using std::endl;
 #include "./inc/shaderloader.h"
 #include "./inc/camera.h"
 #include "./inc/plane.h"
-#include "./inc/cube.h"
+#include "./inc/cylinder.h"
 
 GLFWwindow* setup();
 
@@ -26,10 +26,10 @@ int main(int argc, char** args)
 	//-------- View-Projection settings --------
 	//------------------------------------------
 	Camera cam;
-	cam.pos = glm::vec3(20.0f, 5.0f, 0.0f);
-	cam.look_at = glm::vec3(0.0, 0.0, 17.0);
+	cam.pos = glm::vec3(40.0f, 7.0f, 0.0f);
+	cam.look_at = glm::vec3(0.0, 0.0, 6.0);
 	cam.up = glm::vec3(0.0f, 1.0f, 0.0f);
-	cam.d = 0.8f;
+	cam.d = 1.0f;
 	cam.w = 1.3f;
 	cam.h = 1.0f;
 
@@ -39,13 +39,13 @@ int main(int argc, char** args)
 	//-------- Lighting ---------
 	//---------------------------
 	PointLight PL[2]; const int N_LIGHTS = 2;
-	PL[0].k = 0.6f;
+	PL[0].k = 0.5f;
 	PL[0].falloff = 0.005f;
-	PL[0].pos = glm::vec3(7.0f, 10.0f, 10.0f);
+	PL[0].pos = glm::vec3(-4.0f, 10.0f, 10.0f);
  
-	PL[1].k = 0.6f;
+	PL[1].k = 0.5f;
 	PL[1].falloff = 0.01f;
-	PL[1].pos = glm::vec3(7.0f, 10.0f, -10.0f);
+	PL[1].pos = glm::vec3(8.0f, 10.0f, -10.0f);
 
 	//----------------------------------
 	//-------- Geometry setting --------
@@ -53,21 +53,25 @@ int main(int argc, char** args)
 	Sphere S[2]; const int N_SPHERES = 2;
 
 	S[0].radius = 3.0f;
-	S[0].pos = glm::vec3(-4.0f, -2.0f, 5.0f);
+	S[0].pos = glm::vec3(0.0f, -2.0f, -12.0f);
 
 	S[1].radius = 5.0f;
-	S[1].pos = glm::vec3(0.0f, 0.0f, -5.0f);
+	S[1].pos = glm::vec3(0.0f, 0.0f, 0.0f);
 
-	Plane P; const int N_PLANES = 1;
-	P.normal = glm::vec3(0.0f, 1.0f, 0.0f);
-	P.d = 5.0f;
+	Plane P[2]; const int N_PLANES = 2;
+	P[0].normal = glm::vec3(0.0f, 1.0f, 0.0f);
+	P[0].d = 5.0f;
 
-	Cube C[1]; const int N_CUBES = 1;
-	C[0].pos = glm::vec3(0.0f, 0.0f, 0.0f);
-	C[0].l = 1.0f;
+	P[1].normal = glm::vec3(0.0f, 0.0f, 1.0f);
+	P[1].d = 17.0f;
 
-	Material M[3]; 	
+	Cylinder C[1]; const int N_CYLINDER = 1;
+	C[0].pos = glm::vec3(-9.0f, 0.0f, 15.0f);
+	C[0].a = C[0].b = 3.0f;
 
+	Material M[5]; 	
+
+	//spheres
 	M[0].color[0] = 0.7f;
 	M[0].color[1] = 0.3f;
 	M[0].color[2] = 0.3f;
@@ -83,17 +87,37 @@ int main(int argc, char** args)
 	M[1].kA = 0.1f;
 	M[1].kD = 0.0f;
 	M[1].kS = 0.01f;
-	M[1].kR = 0.3f;
+	M[1].kR = 1.0f;
 	M[1].shininess = 1.0f;
 
-	M[2].color[0] = 0.4f;
-	M[2].color[1] = 0.4f;
-	M[2].color[2] = 0.4f;
+	//planes
+	M[2].color[0] = 1.0f;
+	M[2].color[1] = 1.0f;
+	M[2].color[2] = 1.0f;
 	M[2].kA = 0.3f;
-	M[2].kD = 1.0f;
-	M[2].kS = 0.4f;
-	M[2].kR = 0.2f;
+	M[2].kD = 0.6f;
+	M[2].kS = 0.0f;
+	M[2].kR = 0.0f;
 	M[2].shininess = 1.0f;
+
+	M[3].color[0] = 0.4f;
+	M[3].color[1] = 0.3f;
+	M[3].color[2] = 0.7f;
+	M[3].kA = 0.3f;
+	M[3].kD = 0.6f;
+	M[3].kS = 0.0f;
+	M[3].kR = 0.0f;
+	M[3].shininess = 1.0f;
+
+	//cylinder
+	M[4].color[0] = 0.4f;
+	M[4].color[1] = 0.8f;
+	M[4].color[2] = 0.7f;
+	M[4].kA = 0.4f;
+	M[4].kD = 0.6f;
+	M[4].kS = 0.0f;
+	M[4].kR = 0.0f;
+	M[4].shininess = 1.0f;
 
 	//------------------------------
 	//------- Shader setting -------
@@ -145,13 +169,14 @@ int main(int argc, char** args)
 	//with up = y, look_at = -z and x = up x look_at)
 	for(int i = 0; i < N_SPHERES; i++) transform_sphere(S[i], cam_align);
 	for(int i = 0; i < N_LIGHTS; i++) transform_pointlight(PL[i], cam_align);
-	transform_plane(P, cam_align);
+	for(int i = 0; i < N_CYLINDER; i++) transform_cylinder(C[i], cam_align);
+	for(int i = 0; i < N_PLANES; i++) transform_plane(P[i], cam_align);
 
 	//----- Animation stuff ------
 	//this is not correct, as we're rotating in the camera space.
 	//we should rotate it in world space and then send to camera space,
 	//but this would kill performance for no great reason
-	glm::vec3 _pl1 = glm::vec3(S[1].pos.x, S[1].pos.y, S[1].pos.z);
+	glm::vec3 _pl0 = glm::vec3(S[1].pos.x, S[1].pos.y, S[1].pos.z);
 	glm::mat4 t1 = glm::translate(glm::mat4(1.0f), S[1].pos);
 	glm::mat4 t2 = glm::translate(glm::mat4(1.0f), -S[1].pos);
 	float angle = 0.0f;
@@ -165,7 +190,7 @@ int main(int argc, char** args)
 
 		//------ Animate ball ------
 		glm::mat4 rot = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0f, 1.0f, 0.0f));
-		S[1].pos = glm::vec3( rot * glm::vec4(_pl1, 1.0f));
+		S[1].pos = glm::vec3( rot * glm::vec4(_pl0, 1.0f));
 		angle += 0.007f; if(angle >= 6.28f) angle = 0.0f;
 
 		//------ Load uniform data ------
@@ -192,14 +217,14 @@ int main(int argc, char** args)
 		{
 			GLuint plane_id = plane_base + i*8;
 
-			glUniform1f(plane_id, P.d);
-			glUniform3f(plane_id+1, P.normal[0], P.normal[1], P.normal[2]);
-			glUniform1f(plane_id+2, M[2].kA);
-			glUniform1f(plane_id+3, M[2].kD);
-			glUniform1f(plane_id+4, M[2].kS);
-			glUniform1f(plane_id+5, M[2].kR);
-			glUniform1f(plane_id+6, M[2].shininess);
-			glUniform3f(plane_id+7, M[2].color[0], M[2].color[1], M[2].color[2]);
+			glUniform1f(plane_id, P[i].d);
+			glUniform3f(plane_id+1, P[i].normal[0], P[i].normal[1], P[i].normal[2]);
+			glUniform1f(plane_id+2, M[i+2].kA);
+			glUniform1f(plane_id+3, M[i+2].kD);
+			glUniform1f(plane_id+4, M[i+2].kS);
+			glUniform1f(plane_id+5, M[i+2].kR);
+			glUniform1f(plane_id+6, M[i+2].shininess);
+			glUniform3f(plane_id+7, M[i+2].color[0], M[i+2].color[1], M[i+2].color[2]);
 		}
 
 		GLuint light_base = glGetUniformLocation(raytracer, "L[0].k");
@@ -212,21 +237,22 @@ int main(int argc, char** args)
 			glUniform3f(light_id+2, PL[i].pos[0], PL[i].pos[1], PL[i].pos[2]);
 		}
 
-		GLuint cube_base = glGetUniformLocation(raytracer, "C[0].pos");
-		for(int i = 0; i < N_CUBES; i++)
+		GLuint cylinder_base = glGetUniformLocation(raytracer, "C[0].pos");
+		for(int i = 0; i < N_CYLINDER; i++)
 		{
-			GLuint cube_id = cube_base + i*8;
+			GLuint cylinder_id = cylinder_base + i*9;
 
-			glUniform3f(cube_id, C[i].pos[0], C[i].pos[1], C[i].pos[2]);
-			glUniform1f(cube_id+1, C[i].l);
+			glUniform3f(cylinder_id, C[i].pos[0], C[i].pos[1], C[i].pos[2]);
+			glUniform1f(cylinder_id+1, C[i].a);
+			glUniform1f(cylinder_id+2, C[i].b);
 
 			//set material
-			glUniform1f(cube_id+2, M[2].kA);
-			glUniform1f(cube_id+3, M[2].kD);
-			glUniform1f(cube_id+4, M[2].kS);
-			glUniform1f(cube_id+5, M[2].kR);
-			glUniform1f(cube_id+6, M[2].shininess);
-			glUniform3f(cube_id+7, M[2].color[0], M[2].color[1], M[2].color[2]);
+			glUniform1f(cylinder_id+3, M[4].kA);
+			glUniform1f(cylinder_id+4, M[4].kD);
+			glUniform1f(cylinder_id+5, M[4].kS);
+			glUniform1f(cylinder_id+6, M[4].kR);
+			glUniform1f(cylinder_id+7, M[4].shininess);
+			glUniform3f(cylinder_id+8, M[4].color[0], M[4].color[1], M[4].color[2]);
 		}
 
 		GLuint film_w = glGetUniformLocation(raytracer, "filmW");
