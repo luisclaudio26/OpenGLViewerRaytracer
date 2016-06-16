@@ -66,7 +66,7 @@ uniform _plane P[2];
 uniform _cylinder C[1];
 #define N_CYLINDERS 1
 
-//Light info (we're considering ONE light source)
+//Light info
 uniform _pointlight L[2];
 #define N_LIGHTS 2
 
@@ -103,7 +103,8 @@ void main()
 
 	for(int i = 0; i < SAMPLES_PER_PIXEL; i++)
 	{
-		//generate a random displacement
+		//generate a random displacement. Ignore these input values,
+		//they're completely arbitrarily defined
 		vec2 shift;
 		shift.x = rand( vec2(0.2f, i+1) );
 		shift.y = rand( vec2(0.2f, i) );
@@ -232,13 +233,6 @@ void intersect_with_plane(in vec3 o, in vec3 d, in _plane P, out float t)
 		float _t = -b/a;
 		if(_t > 0) t = _t;
 	}
-}
-
-void swap(inout float a, inout float b)
-{
-	float aux = a;
-	a = b;
-	b = aux;
 }
 
 void intersect_with_cylinder(in vec3 o, in vec3 d, in _cylinder cy, out float t)
