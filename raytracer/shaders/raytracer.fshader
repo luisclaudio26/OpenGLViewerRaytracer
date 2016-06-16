@@ -1,8 +1,12 @@
 #version 330
 
 #define EPS 0.000001f
+#define INF1 100000.0f
+#define INF2 200000.0f
+
 #define SPHERE 1
 #define PLANE 2
+#define CUBE 3
 
 //----------------------------------------------------------
 //---------------------- DATA TYPES ------------------------
@@ -28,6 +32,12 @@ struct _plane {
 	_material M;
 };
 
+struct _cube {
+	vec3 pos;
+	float l;
+	_material M;
+};
+
 struct _pointlight {
 	float k; //Intensity
 	float falloff;
@@ -39,10 +49,13 @@ struct _pointlight {
 //----------------------------------------------------------
 //Geometry info
 uniform _sphere S[2];
-#define N_SPHERES
+#define N_SPHERES 2
 
 uniform _plane P[1];
-#define N_PLANES
+#define N_PLANES 1
+
+uniform _cube C[1];
+#define N_CUBES 1
 
 //Light info (we're considering ONE light source)
 uniform _pointlight L[2];
@@ -69,9 +82,6 @@ out vec3 sample_color;
 //--------------------------------------------------
 //---------------------- CODE ----------------------
 //--------------------------------------------------
-void intersect_with_sphere(in vec3 o, in vec3 p, in _sphere S, out float t);
-void intersect_with_plane(in vec3 o, in vec3 d, in _plane P, out float t);
-
 void cast_ray(in vec3 o, in vec3 d, out int id, out int type, out float t);
 void point_color(in vec3 inter, in vec3 normal, in vec3 eye2inter, in _material obj_mat, out vec3 inter_color);
 
@@ -138,6 +148,8 @@ void get_material(in int obj_id, in int obj_type, out _material obj_mat)
 		obj_mat = S[obj_id].M;
 	else if(obj_type == PLANE)
 		obj_mat = P[obj_id].M;
+	else if(obj_type == CUBE)
+		obj_mat = C[obj_id].M;
 }
 
 void compute_normal(in vec3 intersection, in int obj_id, in int obj_type, out vec3 normal)
@@ -148,13 +160,21 @@ void compute_normal(in vec3 intersection, in int obj_id, in int obj_type, out ve
 		normal = normalize(intersection - S[obj_id].pos);
 	else if(obj_type == PLANE)
 		normal = normalize(P[obj_id].normal);
+	else if(obj_type == CUBE)
+	{
+		_cube c = C[obj_id];
+
+		normal.x = step(c.l, intersection.x - c.pos.x) * c.l;
+		normal.y = step(c.l, intersection.y - c.pos.y) * c.l;
+		normal.z = step(c.l, intersection.z - c.pos.z) * c.l;
+	}
 }
 
 void intersect_with_sphere(in vec3 o, in vec3 p, in _sphere S, out float t)
 {
 	//REMEMBER! One must really define the OUT variables here,
 	//it won't retain the value it has outside this function
-	t = 200000.0f;
+	t = INF2;
 
 	//Compute intersection with sphere
 	float a = dot(p,p);
@@ -178,7 +198,7 @@ void intersect_with_sphere(in vec3 o, in vec3 p, in _sphere S, out float t)
 
 void intersect_with_plane(in vec3 o, in vec3 d, in _plane P, out float t)
 {
-	t = 200000.0f;
+	t = INF2;
 
 	//compute intersection with plane
 	float a = dot(P.normal, d);
@@ -193,13 +213,27 @@ void intersect_with_plane(in vec3 o, in vec3 d, in _plane P, out float t)
 	}
 }
 
+void intersect_with_cube(in vec3 o, in vec3 d, in _cube cube, out float t)
+{
+	t = INF2;
+
+	//infinite norms
+	vec3 oc = o - cube.pos;
+	float norm_oc = max(abs(oc.x), max(abs(oc.y), abs(oc.z)));
+	float norm_d = max(abs(d.x), max(abs(d.y), abs(d.z)));
+
+	//compute intersections
+	t = (cube.l - norm_oc) / norm_d;
+	if(t < 0) t = -t;
+}
+
 void cast_ray(in vec3 o, in vec3 d, out int id, out int type, out float t)
 {
 	id = -1; t = 100000.0f; //Infinity
 	float t_aux;
 	
-	//test intersection with the spheres
-	for(int i = 0; i < 2; i++)
+	//test intersection with spheres
+	for(int i = 0; i < N_SPHERES; i++)
 	{
 		intersect_with_sphere(o, d, S[i], t_aux);
 
@@ -211,8 +245,8 @@ void cast_ray(in vec3 o, in vec3 d, out int id, out int type, out float t)
 		}
 	}
 
-	//test intersection with the planes
-	for(int i = 0; i < 1; i++)
+	//test intersection with planes
+	for(int i = 0; i < N_PLANES; i++)
 	{
 		intersect_with_plane(o, d, P[i], t_aux);
 
@@ -221,6 +255,19 @@ void cast_ray(in vec3 o, in vec3 d, out int id, out int type, out float t)
 			t = t_aux;
 			id = i;
 			type = PLANE;
+		}
+	}
+
+	//test intersection with cubes
+	for(int i = 0; i < N_CUBES; i++)
+	{
+		intersect_with_cube(o, d, C[i], t_aux);
+
+		if(t_aux < t)
+		{
+			t = t_aux;
+			id = i;
+			type = CUBE;
 		}
 	}
 }

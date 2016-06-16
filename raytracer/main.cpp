@@ -14,6 +14,7 @@ using std::endl;
 #include "./inc/shaderloader.h"
 #include "./inc/camera.h"
 #include "./inc/plane.h"
+#include "./inc/cube.h"
 
 GLFWwindow* setup();
 
@@ -60,6 +61,10 @@ int main(int argc, char** args)
 	Plane P; const int N_PLANES = 1;
 	P.normal = glm::vec3(0.0f, 1.0f, 0.0f);
 	P.d = 5.0f;
+
+	Cube C[1]; const int N_CUBES = 1;
+	C[0].pos = glm::vec3(0.0f, 0.0f, 0.0f);
+	C[0].l = 1.0f;
 
 	Material M[3]; 	
 
@@ -185,7 +190,7 @@ int main(int argc, char** args)
 		GLuint plane_base = glGetUniformLocation(raytracer, "P[0].d");
 		for(int i = 0; i < N_PLANES; i++)
 		{
-			GLuint plane_id = plane_base + i*7;
+			GLuint plane_id = plane_base + i*8;
 
 			glUniform1f(plane_id, P.d);
 			glUniform3f(plane_id+1, P.normal[0], P.normal[1], P.normal[2]);
@@ -205,6 +210,23 @@ int main(int argc, char** args)
 			glUniform1f(light_id, PL[i].k);
 			glUniform1f(light_id+1, PL[i].falloff);
 			glUniform3f(light_id+2, PL[i].pos[0], PL[i].pos[1], PL[i].pos[2]);
+		}
+
+		GLuint cube_base = glGetUniformLocation(raytracer, "C[0].pos");
+		for(int i = 0; i < N_CUBES; i++)
+		{
+			GLuint cube_id = cube_base + i*8;
+
+			glUniform3f(cube_id, C[i].pos[0], C[i].pos[1], C[i].pos[2]);
+			glUniform1f(cube_id+1, C[i].l);
+
+			//set material
+			glUniform1f(cube_id+2, M[2].kA);
+			glUniform1f(cube_id+3, M[2].kD);
+			glUniform1f(cube_id+4, M[2].kS);
+			glUniform1f(cube_id+5, M[2].kR);
+			glUniform1f(cube_id+6, M[2].shininess);
+			glUniform3f(cube_id+7, M[2].color[0], M[2].color[1], M[2].color[2]);
 		}
 
 		GLuint film_w = glGetUniformLocation(raytracer, "filmW");
