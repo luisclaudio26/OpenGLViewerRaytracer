@@ -5,7 +5,7 @@ CINC = -I /usr/include/GLFW
 EXEC = render
 
 all:
-	$(CC) $(CINC) $(CFLAGS) $(CLIBS) -o $(EXEC) main.cpp
+	$(CC) $(CINC) $(CFLAGS) -o $(EXEC) main.cpp $(CLIBS)
 
 clean:
 	rm *.o
