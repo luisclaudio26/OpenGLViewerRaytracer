@@ -1,4 +1,4 @@
-# Simple .OBJ viewer and Whitted raytracer
+# Simple OBJ viewer and Whitted raytracer with OpenGL/GLSL
 
 <img src="https://github.com/luisclaudio26/CG-Project/raw/master/Suzanne.png" width="400"> <img src="https://github.com/luisclaudio26/CG-Project/raw/master/Tyra.png" width="400">
 
